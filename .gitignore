@@ -1,0 +1,17 @@
+/build*/
+/dist/
+/tools/vendor/
+/tmp/
+/docs/spec-review/
+/service/data/
+/test-results/
+*.pem
+*.key
+*.pfx
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.env
+.env.*
+*.pdb
+*.user

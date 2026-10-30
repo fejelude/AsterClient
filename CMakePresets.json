@@ -1,0 +1,19 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "windows-x64",
+      "displayName": "Windows x64 / Visual Studio 2022",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": { "CMAKE_SYSTEM_VERSION": "10.0.22621.0" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "release", "configurePreset": "windows-x64", "configuration": "Release" }
+  ],
+  "testPresets": [
+    { "name": "release", "configurePreset": "windows-x64", "configuration": "Release", "output": { "outputOnFailure": true } }
+  ]
+}

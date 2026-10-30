@@ -1,0 +1,579 @@
+{
+  "imguiCommit": "f5befd2d29e66809cd1110a152e375a7f1981f06",
+  "jsonCommit": "55f93686c01528224f448c19128836e7df245f72",
+  "minhookCommit": "c3fcafdc10146beb5919319d0683e44e3c30d537",
+  "enttCommit": "4a2d1a8541228a90e02a873dba6a980506c42c03",
+  "cmakeVersion": "3.31.8",
+  "files": [
+    {
+      "path": "external/imgui/imgui.cpp",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imgui.cpp",
+      "sha256": "af1cc31255fbf58d57ecc9d727cbd39a84e44fa8f11be7fd419fa0100c5255d8"
+    },
+    {
+      "path": "external/imgui/imgui.h",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imgui.h",
+      "sha256": "2d0180859ff85e7fe66ed9999b0f05f2fc45176773046a8f86b3b6bd190b0765"
+    },
+    {
+      "path": "external/imgui/imgui_draw.cpp",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imgui_draw.cpp",
+      "sha256": "9d2d9ee6745d9b98d7f39a16da8ffcf783f90bb8c9e931038fc8e9a15cbe3d84"
+    },
+    {
+      "path": "external/imgui/imgui_tables.cpp",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imgui_tables.cpp",
+      "sha256": "4ea380fa9d49cac6cbfbc8b969969f9b0705518ec9ca340681d8c70e3eefbc28"
+    },
+    {
+      "path": "external/imgui/imgui_widgets.cpp",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imgui_widgets.cpp",
+      "sha256": "54ac29dbcbe70091f5e5fc2cb4099e6d0b9d1c939e5158f2be983cb508714414"
+    },
+    {
+      "path": "external/imgui/imgui_demo.cpp",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imgui_demo.cpp",
+      "sha256": "fa402333b7da17227b00e8ca9bc78c17a9d0cce8c1fb6e555e42948fe482af25"
+    },
+    {
+      "path": "external/imgui/imgui_internal.h",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imgui_internal.h",
+      "sha256": "1363c617a743957f367afe1c6c88345870b7aa25ee339809fb915466e4fb9575"
+    },
+    {
+      "path": "external/imgui/imconfig.h",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imconfig.h",
+      "sha256": "0884061cc43e27e1d346fe18dcd1425792eb2532d3d16610a82eb5ac751f7594"
+    },
+    {
+      "path": "external/imgui/imstb_rectpack.h",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imstb_rectpack.h",
+      "sha256": "2efa3d5f7d003c19743b15155dad9f46d9f9fc783a18893d703b431d3c990972"
+    },
+    {
+      "path": "external/imgui/imstb_textedit.h",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imstb_textedit.h",
+      "sha256": "77010e494caf72c178b573569612aec409d24380409676325a31d02de0ec64b7"
+    },
+    {
+      "path": "external/imgui/imstb_truetype.h",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/imstb_truetype.h",
+      "sha256": "87f08919ae8e7223451d0e9d06b62829075d3e920c9e6ad436db9d7e7427ffce"
+    },
+    {
+      "path": "external/imgui/LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/LICENSE.txt",
+      "sha256": "c80c5789748d955c4a650562baa0d750494e2c7128c2ca66aaebe2e3c4e198bf"
+    },
+    {
+      "path": "external/imgui/backends/imgui_impl_win32.cpp",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/backends/imgui_impl_win32.cpp",
+      "sha256": "e572de10045298bbf833aa7a15e28d2777df57603b4e50b9c8aa4c878f1e4cfa"
+    },
+    {
+      "path": "external/imgui/backends/imgui_impl_win32.h",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/backends/imgui_impl_win32.h",
+      "sha256": "606df46db972371ac6b5f5ad94bba75a09657da47b259105c4845c1f8638fa0c"
+    },
+    {
+      "path": "external/imgui/backends/imgui_impl_dx11.cpp",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/backends/imgui_impl_dx11.cpp",
+      "sha256": "7a8f7294b86065d514a9e19f1bed3bc84d4587f0142b2c551a584b4067cb2902"
+    },
+    {
+      "path": "external/imgui/backends/imgui_impl_dx11.h",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/backends/imgui_impl_dx11.h",
+      "sha256": "cf55f23132dcd240c31995494e0828abb84e552adee71be20f384d68eca21697"
+    },
+    {
+      "path": "external/imgui/examples/example_win32_directx11/main.cpp",
+      "url": "https://raw.githubusercontent.com/ocornut/imgui/f5befd2d29e66809cd1110a152e375a7f1981f06/examples/example_win32_directx11/main.cpp",
+      "sha256": "58c218702299ada4a2d0f7fde6dd04ab42460f8b792a82a05bdd64d9da6e94aa"
+    },
+    {
+      "path": "external/json/json.hpp",
+      "url": "https://raw.githubusercontent.com/nlohmann/json/55f93686c01528224f448c19128836e7df245f72/single_include/nlohmann/json.hpp",
+      "sha256": "aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63"
+    },
+    {
+      "path": "external/json/LICENSE.MIT",
+      "url": "https://raw.githubusercontent.com/nlohmann/json/55f93686c01528224f448c19128836e7df245f72/LICENSE.MIT",
+      "sha256": "46a65cffd1ea955132d95a8dd921640714a8d6b537d2e4e482d31145ae95b603"
+    },
+    {
+      "path": "tools/vendor/cmake-3.31.8-windows-x86_64.zip",
+      "url": "https://github.com/Kitware/CMake/releases/download/v3.31.8/cmake-3.31.8-windows-x86_64.zip",
+      "sha256": "81aa9964dbabd71fe02e7ec50472fd3ad56138c49944515ece9001efbff8d719"
+    },
+    {
+      "path": "external/minhook/CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/CMakeLists.txt",
+      "sha256": "ff59c571f60eb3f8fdee11b199cbe0ffd7477386f0e145da87691b1233e3cdc6"
+    },
+    {
+      "path": "external/minhook/LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/LICENSE.txt",
+      "sha256": "d5c2224982b0b95a16b098a561335fa93f3eaf4d0aa964b7843edb986df78dc8"
+    },
+    {
+      "path": "external/minhook/include/MinHook.h",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/include/MinHook.h",
+      "sha256": "62dff05e63155c6bf8135c36a0d79dedbdcaaede9da26fe38daf0bea34323e38"
+    },
+    {
+      "path": "external/minhook/src/buffer.c",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/buffer.c",
+      "sha256": "0ab484d7870c3a8e7a3a1ee61e2070072cf445ed85b619d4c4207fed34356d99"
+    },
+    {
+      "path": "external/minhook/src/buffer.h",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/buffer.h",
+      "sha256": "9769702bd625249e59a19ede05c84365fcc7707e1fa0e5df08df42227cee13e3"
+    },
+    {
+      "path": "external/minhook/src/hook.c",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/hook.c",
+      "sha256": "edcce4c81985d7dd5b73feae96d6498c8f749b1bca4c3d2d9926ea9a17a84755"
+    },
+    {
+      "path": "external/minhook/src/trampoline.c",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/trampoline.c",
+      "sha256": "f13a169f803ff5a8e45c58ce668b4377a9878c0fc4452369b8a1325065186b2b"
+    },
+    {
+      "path": "external/minhook/src/trampoline.h",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/trampoline.h",
+      "sha256": "53ed9934492320617a27bfd952ffe7f5b7a4a1d09963d4512447082fe7b727b4"
+    },
+    {
+      "path": "external/minhook/src/hde/hde64.c",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/hde/hde64.c",
+      "sha256": "824eafa315322e6da105a7ce4ec1fc0e0adeee0106d32152fbb0b59e709bd15c"
+    },
+    {
+      "path": "external/minhook/src/hde/hde64.h",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/hde/hde64.h",
+      "sha256": "e99aa4997bda14b534c614c3d8cb78a72c4aca91a1212c8b03ec605d1d75e36e"
+    },
+    {
+      "path": "external/minhook/src/hde/hde32.c",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/hde/hde32.c",
+      "sha256": "5da4941e9044f7b325c7f952b5840089e365f374740b7fe7318805d08c0d6c32"
+    },
+    {
+      "path": "external/minhook/src/hde/hde32.h",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/hde/hde32.h",
+      "sha256": "5132de5be8ac7a9d054420f5caef0fb01437faa892f03b3cdc77f795973bf15a"
+    },
+    {
+      "path": "external/minhook/src/hde/pstdint.h",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/hde/pstdint.h",
+      "sha256": "604d1cdf45c5a95bc9cf1bbf39ca05ef83013541101d34971c5cd7577e3d5247"
+    },
+    {
+      "path": "external/minhook/src/hde/table64.h",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/hde/table64.h",
+      "sha256": "b774446d2f110ce954fb0a710f4693c5562ddbd8d56fe84106f2ee80db8b50a2"
+    },
+    {
+      "path": "external/minhook/src/hde/table32.h",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/src/hde/table32.h",
+      "sha256": "43bf687a9fff071b5f46070db4d36c846f8e069cdc57485ee897c499aacdde23"
+    },
+    {
+      "path": "external/entt/entt.hpp",
+      "url": "https://raw.githubusercontent.com/skypjack/entt/4a2d1a8541228a90e02a873dba6a980506c42c03/single_include/entt/entt.hpp",
+      "sha256": "31be51708c7325ecb7877182fa9ee68a20fb2121ce6bcd6c1687506f0fb1c8b5"
+    },
+    {
+      "path": "external/entt/LICENSE",
+      "url": "https://raw.githubusercontent.com/skypjack/entt/4a2d1a8541228a90e02a873dba6a980506c42c03/LICENSE",
+      "sha256": "c68a4a36a8e037ef0b22a0420258264dfa7ac8846b98142d62ca848b76437e46"
+    },
+    {
+      "path": "external/minhook/cmake/minhook-config.cmake.in",
+      "url": "https://raw.githubusercontent.com/TsudaKageyu/minhook/c3fcafdc10146beb5919319d0683e44e3c30d537/cmake/minhook-config.cmake.in",
+      "sha256": "0aa1f5c2a987966763dc518875d16b23ff360c2134fb1b0643b8638d49d5bec7"
+    },
+    {
+      "path": "tools/vendor/bedrock-sdk-reference.zip",
+      "url": "https://codeload.github.com/b01dev/MCBE_DX12_ModBase/zip/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd",
+      "sha256": "beca2a24dc6eeab6d0e6f6ef63193c41f4de5e9843a498eead420b5886ff10ee"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/config/config.h",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/config/config.h",
+      "sha256": "b645de3db2eb75c01df84184eb219b502d3c17a5e91cb94471aab1fcdc4deb3f"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/config/macro.h",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/config/macro.h",
+      "sha256": "ce74454d19e6da75f4a7724f8d71b3ee28835f93373f94e86c9a05c4780e4997"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/config/version.h",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/config/version.h",
+      "sha256": "9d613fd6720fd34c2fb7b2a441089fca88e6a2970e0023c6c9a85883c068d847"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/container/dense_map.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/container/dense_map.hpp",
+      "sha256": "98a8b1a7c9d1bb8af4276c8636bcbd4bfe515d371b6adb403062ba4063b03055"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/container/dense_set.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/container/dense_set.hpp",
+      "sha256": "dfb7fc98fceebda877bf82b61e07153645d14197720ed1e28e9c5b763f4f7281"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/container/fwd.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/container/fwd.hpp",
+      "sha256": "dc34eb1caef46317aca83326267f002b7a4a550b53240fc9e53ed17de4ab7349"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/algorithm.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/algorithm.hpp",
+      "sha256": "5c0f70fdac808eb4a93b01c0d0c78259bf8ddcd75b775ad929a73ff6c203fa62"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/any.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/any.hpp",
+      "sha256": "0ad02dabfc9d1a4a5ee4c0f12f524d1209f4bf7a31348d4374a91d54ccbec9f2"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/attribute.h",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/attribute.h",
+      "sha256": "1491e04d77c28281187493f64fd69c5e9112cfbc15dbe69b26725954a226f7de"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/compressed_pair.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/compressed_pair.hpp",
+      "sha256": "75999ee09de9c53f1680a580b9a456f116f75ded07f65168f911141def7162c5"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/enum.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/enum.hpp",
+      "sha256": "0945e1b775c1d13b4caa93d7f50c0eb3ed8168ddf199785976a6075027f2a508"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/family.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/family.hpp",
+      "sha256": "41844fa7bb2b4fa2518750f51d2401d1fd786d2158c4eef5a8605d1caf90f541"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/fwd.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/fwd.hpp",
+      "sha256": "10ecfff4b4bf18c0fa30ea020e6cd3e2ee6e867c2437990915f9a60ea276b0a1"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/hashed_string.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/hashed_string.hpp",
+      "sha256": "6dc95c2d5fe1fe57db4d8a24674eb603640f1057cc636319844b5b78470d5b0d"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/ident.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/ident.hpp",
+      "sha256": "aeb39c3ff57652251f15cefc44254a1a39c479549264a35e8c53d04fc897619a"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/iterator.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/iterator.hpp",
+      "sha256": "a395b9a4b301d4f4f0bdcc5cbb7bfb60eefb365577bc609394612b61bee9a84a"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/memory.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/memory.hpp",
+      "sha256": "2ff862c1c507eea3a57d6c7e68b6a696cb5d0a9b6b296366ece0a7af1ef2ca16"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/monostate.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/monostate.hpp",
+      "sha256": "e248edad15d5a08636e3470b073917511e035edf1a40ee470e224e936d41a932"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/tuple.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/tuple.hpp",
+      "sha256": "48c3b24cca5ee81dd28f51a4f9674dde3e95543a33faa434754d8c43f3b40d0c"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/type_info.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/type_info.hpp",
+      "sha256": "0be51580d0aa3f6a6f511e4175f87222a438c1bfd32ab72d78c81c275965968f"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/type_traits.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/type_traits.hpp",
+      "sha256": "54f82676675801117c7dbdd242d4f818d7bb150444aed418242edd41703f0707"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/core/utility.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/core/utility.hpp",
+      "sha256": "2493f5dc0a0e9feb057614ebdffeefbdde9908ec7c2e370844bd5f46f0b1fde6"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/component.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/component.hpp",
+      "sha256": "2ca0f8a8e1ebe758e6cdbbddccf17ecd441b5312033878ce44af8aa484cfe84a"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/entity.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/entity.hpp",
+      "sha256": "daab4d3d20cdf1b3b28a83539914e604901c580763c6855a3f2b6469b7616b81"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/fwd.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/fwd.hpp",
+      "sha256": "aab8673169072b1985368ce38fa53d64d87fdfaacc1fc18a1fc305480116ec73"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/group.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/group.hpp",
+      "sha256": "22947cbc9636b9f005f6fb2a3656f710a491d1974267b6cc2bdb3dcdecb7bb5d"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/handle.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/handle.hpp",
+      "sha256": "76d922f0446a7fdc3d6458927851f84c29006bd0519de2724a8c029d2ea5ecbd"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/helper.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/helper.hpp",
+      "sha256": "4daa3a1e14411e15260dff8ba4a3d90b349b00f7f1fec909f8605dfd79c3ea6e"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/mixin.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/mixin.hpp",
+      "sha256": "00f159ed4e51c9ebaa6311ffc2acd6a2b58b845c28aa303f0073d6ce9a53c97f"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/observer.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/observer.hpp",
+      "sha256": "a1dd0a6159dbbf3e1093353a34ce745774d8c05d77025ef56c67ca3a3c984bda"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/organizer.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/organizer.hpp",
+      "sha256": "2d510a720ec491a450558c450fd89062697531a698f1d06af28a50aa4b6835ba"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/registry.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/registry.hpp",
+      "sha256": "103665fcff5f699e29423d3d6bb6bff349d1a3dc4f48edfaf3d8797a31f40adb"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/runtime_view.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/runtime_view.hpp",
+      "sha256": "1703d74ac5fb8143f86d200c66160afe935ed5e36b7eb791aecb67b25efc930e"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/snapshot.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/snapshot.hpp",
+      "sha256": "c1a848b0f453d0da5b78668929a4764bbac9c942c127670c2039ff43b16f9274"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/sparse_set.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/sparse_set.hpp",
+      "sha256": "48d7d6800899e03dede4d3b5dc4400d3d5180e9ea460b3b1d498b9bb24d83619"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/storage.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/storage.hpp",
+      "sha256": "626154bb5a1d7786841d1af3d28c53e0853b0153730cecffb0a4417078d028b9"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/table.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/table.hpp",
+      "sha256": "ff53a2c5941ae1615117b8b56ece01a026660b84ca452e3d6655412d951162bf"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entity/view.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entity/view.hpp",
+      "sha256": "11ccae0f151a91d6cfb6d53ce2e665581ceba5bbffed1a7bb04d3a5f2249b92d"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/entt.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/entt.hpp",
+      "sha256": "5b35e283cc5edf5d932dd9a47f5253e7d5fff2257110d13cd28edee86dd52130"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/fwd.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/fwd.hpp",
+      "sha256": "509ef8dd053ead41d8c9555bee3a3603dff0dacd723922680e7be54fadbdeaa3"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/graph/adjacency_matrix.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/graph/adjacency_matrix.hpp",
+      "sha256": "6e81e0c39dc61202b65b8ae3dfdecf80ce519acbc8e4ef61e322fae2811e0284"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/graph/dot.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/graph/dot.hpp",
+      "sha256": "c0846d0cb7c3d52c7d9ef958250e214565dd86da7f90fca18fdb7446d9e0235d"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/graph/flow.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/graph/flow.hpp",
+      "sha256": "bce213d416d05975d4b392c950286fe5ab60cd0d2823b0e69591bd823aef8889"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/graph/fwd.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/graph/fwd.hpp",
+      "sha256": "0a30baa79539a3382acb118f5ae8b15114ab7bc1943c8e3be8e948e640852918"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/locator/locator.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/locator/locator.hpp",
+      "sha256": "fc6b8267ed48c0e90abcf246d04090b9f357580e3e6c72e363c6431ef568bd1d"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/adl_pointer.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/adl_pointer.hpp",
+      "sha256": "cea9e4d2079ab6fe0e77bd64d73b75c7c965ec097d91b5ff658744aa5b0ca2ce"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/container.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/container.hpp",
+      "sha256": "2a8b45ef657d003c78a9fb2a35c450821eac9bea446125f63b3c103686e9bfad"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/context.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/context.hpp",
+      "sha256": "3f25d075bd99e76e551cb168c23d4540bd8c24a23675fe551db5665248293de6"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/factory.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/factory.hpp",
+      "sha256": "fe101fa180f7d3bec8eac38b77d8055624216dec1c6a0a8e3755f19818ad07d7"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/fwd.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/fwd.hpp",
+      "sha256": "380b24470905d9897f0dc669e787c8a2503ace8beeb9f9e41340beb1c98002f7"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/meta.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/meta.hpp",
+      "sha256": "f12aa62ded5b5d0e9921b924336166454304e207dafb58660cf239a8430e164b"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/node.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/node.hpp",
+      "sha256": "e36e61367c5af662684530d1c3f21133d96c4e55288b7ac04aa598bba2d488a4"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/pointer.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/pointer.hpp",
+      "sha256": "3533384f9ba8f05f44c9ba41ba62371e5164e13d813bfce1cb13202694d3c2f1"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/policy.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/policy.hpp",
+      "sha256": "82b00b2892bc417ccdb528b19745229103d3671c32e126812351fbe974e7cc71"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/range.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/range.hpp",
+      "sha256": "52912391ee44e2cb237c68219db9e8925313bd313369fb91fee5be1a0a865df9"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/resolve.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/resolve.hpp",
+      "sha256": "211b0ef8a68fefae851b09726608b2ad77bf22a1f43833985b92c7aab5295124"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/template.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/template.hpp",
+      "sha256": "f8bc38d444d227e9f6b60937e75ba3c60190bb121fea74bf54574b87d4cf1f93"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/type_traits.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/type_traits.hpp",
+      "sha256": "61d2ec0b0df585afe68cc62eb45180fbb5d139f41a5119eceed290e0d6683194"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/meta/utility.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/meta/utility.hpp",
+      "sha256": "67794d975667ed8c5fc2f824f4835a6df4233b3117480f5ba72755de749e4935"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/platform/android-ndk-r17.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/platform/android-ndk-r17.hpp",
+      "sha256": "29cd699a138b8167928e78aa92f479a04850af2fb31f813a6a1c32169ba2d927"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/poly/fwd.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/poly/fwd.hpp",
+      "sha256": "59020bd045216d13d84872570484479ec44df4e19e82a1ea61bf66ee1e623c00"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/poly/poly.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/poly/poly.hpp",
+      "sha256": "49d848e21e309948d0db5ff632263e4cd995ecea94540ea88786777807c9ee86"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/process/fwd.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/process/fwd.hpp",
+      "sha256": "8eeb68608fc8ecb9d3a47b125022a68b3dc5ad6d4dda09026409402ffa887119"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/process/process.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/process/process.hpp",
+      "sha256": "c309ace56eb0d2794f2446ee7c9e1f58acabe50a54a3d4a36a568cb9d46e4281"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/process/scheduler.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/process/scheduler.hpp",
+      "sha256": "7584b76fbef248bb84d3e277d11c9381e1b43e0eea9824abee8f9f74399f6674"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/resource/cache.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/resource/cache.hpp",
+      "sha256": "9c95d1aa49d24958861634473b99b8ee60e6f31c733ede033df8067d95982c1f"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/resource/fwd.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/resource/fwd.hpp",
+      "sha256": "84873358353469a9e85e66a14f0db5f74ef7664f6d7263f7c270f04a01f229e0"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/resource/loader.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/resource/loader.hpp",
+      "sha256": "66b64038f5fb6481513ac60c172270b42e430091eb7074b06ce215839d639f28"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/resource/resource.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/resource/resource.hpp",
+      "sha256": "4b7a2e806b9c74353272dc5813e6bc129c626b24977121c1e8fa1faf7454045d"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/signal/delegate.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/signal/delegate.hpp",
+      "sha256": "a2b1015a30181e57c7b50b273e1a25e8682f1b019cdafbccab7138c408d1a345"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/signal/dispatcher.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/signal/dispatcher.hpp",
+      "sha256": "d541d6d233f7b09dd1c23a56b138dc1aa9065d76085aa0e17be7de167a9e5a4c"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/signal/emitter.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/signal/emitter.hpp",
+      "sha256": "253d83aad4bc605ac4b52ae4a44db4af0d218abedc1ad635813945b75f5866b7"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/signal/fwd.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/signal/fwd.hpp",
+      "sha256": "1774ddde69be95b383ca14ec2ec70ed7d9470a096e671fdefa9748137c03d549"
+    },
+    {
+      "path": "external/bedrock-sdk/entt/signal/sigh.hpp",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/external/entt/signal/sigh.hpp",
+      "sha256": "b793f8ebd313ee14c51486eabcfb230d7f09eb35bca9f7961ddc58fdbd56c7d9"
+    },
+    {
+      "path": "external/bedrock-sdk/LICENSE",
+      "url": "https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd/LICENSE",
+      "sha256": "6b41cef3d8775a3be9fa7a3f1eef290e0207d40374e06677f09be754f92a38d0"
+    }
+  ]
+}

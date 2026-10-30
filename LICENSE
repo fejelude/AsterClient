@@ -1,0 +1,7 @@
+Private development delivery
+
+Original project code and assets are supplied to the project owner for development and review. This file does not grant third parties a redistribution license for the original project. The project owner may choose a distribution license before publication.
+
+Third-party components retain their own licenses. Dear ImGui and nlohmann/json are used under their MIT licenses; complete notices are in LICENSES. Portable CMake is a build tool under its own notices and is not bundled into the application release.
+
+Minecraft is a trademark of Microsoft/Mojang. Nitro is referenced only as the user's behavioral/visual research source. This independent project is not affiliated with either product. Proprietary reference screenshots, binaries and artwork are not included in the distributable application.

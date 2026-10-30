@@ -1,0 +1,2 @@
+# Preserve pinned dependency bytes so the SHA-256 lock remains portable.
+* -text

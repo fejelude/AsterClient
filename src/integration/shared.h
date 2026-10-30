@@ -1,0 +1,60 @@
+#pragma once
+#include <Windows.h>
+#include <cstdint>
+#include <type_traits>
+namespace aster::bridge {
+inline constexpr std::uint32_t Protocol=1;
+inline constexpr std::uint32_t Magic=0x41535452;
+inline constexpr unsigned MaxActors=128;
+struct Float3 {float x=0,y=0,z=0;};
+struct Float2 {float x=0,y=0;};
+enum class Status:std::uint32_t {Waiting,Hooked,WorldDetected,LayoutVerified,Stopped,SignatureFailure,LayoutFailure};
+struct Control {
+    std::uint32_t magic=Magic,protocol=Protocol;
+    std::uint64_t session=0,heartbeat=0;
+    std::uint32_t shutdown=0,probeOnly=1;
+    float timerMultiplier=1.f;
+    std::uint32_t timerEnabled=0;
+};
+struct ActorData {
+    std::uint64_t entityId=0,address=0;
+    Float3 position,velocity;
+    Float2 rotation;
+    float width=0,height=0;
+    std::int32_t type=0;
+};
+struct TimerCandidate {std::uint32_t clientOffset=0,minecraftOffset=0;std::uint64_t address=0;float data[8]{};};
+struct Telemetry {
+    std::uint32_t magic=Magic,protocol=Protocol;
+    Status status=Status::Waiting;
+    std::uint32_t error=0;
+    std::uint64_t heartbeat=0,updateCalls=0,client=0,localPlayer=0;
+    std::uint64_t localTicks=0;
+    float measuredLocalTps=0,timerApplied=20.f;
+    std::uint32_t foreground=0;
+    std::uint64_t allActorTicks=0;
+    ActorData local;
+    std::uint32_t actorCount=0,layoutFailures=0;
+    ActorData actors[MaxActors]{};
+    std::uint32_t timerCount=0;
+    TimerCandidate timers[12]{};
+    std::uint64_t gameMode=0;
+    std::uint64_t gameModeVtable[24]{};
+    std::uint64_t clientVtable[64]{};
+};
+struct Shared {
+    volatile LONG controlSequence=0;
+    Control control;
+    volatile LONG telemetrySequence=0;
+    Telemetry telemetry;
+};
+static_assert(std::is_trivially_copyable_v<Control>&&std::is_trivially_copyable_v<Telemetry>);
+template<class T> bool readConsistent(const volatile LONG& sequence,const T& source,T& result){
+    auto before=InterlockedCompareExchange(const_cast<volatile LONG*>(&sequence),0,0);if(before&1)return false;
+    MemoryBarrier();memcpy(&result,&source,sizeof(T));MemoryBarrier();
+    return before==InterlockedCompareExchange(const_cast<volatile LONG*>(&sequence),0,0);
+}
+template<class T> void writeConsistent(volatile LONG& sequence,T& destination,const T& source){
+    InterlockedIncrement(&sequence);MemoryBarrier();memcpy(&destination,&source,sizeof(T));MemoryBarrier();InterlockedIncrement(&sequence);
+}
+} // namespace aster::bridge

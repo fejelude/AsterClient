@@ -64,4 +64,4 @@ The update checker verifies signed metadata, SHA-256 and a trusted Authenticode 
 
 Read [implementation status](docs/IMPLEMENTATION_STATUS.md), [compatibility](docs/COMPATIBILITY.md), [requirements traceability](docs/REQUIREMENTS.md), and [verification report](docs/VERIFICATION.md). The report separates automated tests, live UI checks, Windows input tests and unperformed in-world tests. No supplied material establishes exact proprietary gameplay algorithms; unsupported capability labels are deliberate, not hidden success claims.
 
-The development release is **unsigned**. Verify the published SHA-256 manifest. A trusted publisher certificate is required before a public signed release; no trust-store or antivirus settings are changed.
+The development release is **unsigned**. Verify the published SHA-256 manifest. A trusted publisher certificate is required before a public signed release; no trust-store or antivirus settings are changed. so yea

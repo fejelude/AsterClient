@@ -1,22 +1,22 @@
-# Compatibility matrix
+# Compatibility
 
-Development evidence: Windows 11 Home Single Language, x64, build 26200. Minecraft Store package `Microsoft.MinecraftUWP_8wekyb3d8bbwe`, x64, `1.26.6005.0` was running and positively identified through Windows package APIs. The world-selection screen was inspected without opening or changing a user world.
+The native adapter supports exactly Microsoft Store x64 package `Microsoft.MinecraftUWP_8wekyb3d8bbwe`, build `1.26.6005.0`, executable SHA-256 `988f6a61403b4381aa41e6c66d64cce441b14e561a9b10f647c2758ef3f2672a`. Observed game protocol: 2225. Package identity, architecture, version and executable hash must all match.
 
-| Capability | 1.26.6005.0 | Other/future builds | Evidence |
-|---|---|---|---|
-| Native UI, profiles, appearance, diagnostics | Available independently of game | Available | Built, executed, native UI inspected |
-| Minecraft identity/version/architecture detection | Verified on this PC | Identity can be detected; no support inferred | Live package API and native test |
-| Foreground/cursor metadata | Implemented | Metadata only | Native window fixture and live menu report |
-| Click scheduling, priming, jitter, inversion | Windows fixture verified; **game effect unverified** | Input denied | Real SendInput fixture plus deterministic scheduler tests |
-| Sprint and Auto Walk | Key output/cleanup verified in fixture; **game effect unverified** | Input denied | Owned-key and cancellation tests |
-| Reach, Aim Assist, Hitbox, Velocity, Timer, Zoom, Auto 360 | **Unsupported** | **Unsupported** | No verified game-engine adapter |
-| Auto S-Tap, Tuner, Triggerbot, block-breaking modes | **Unsupported / behavior undefined** | **Unsupported** | PDF explicitly leaves behavior or required telemetry unknown |
-| License/vault | Verified against included own-service fixture | Independent of game | Activation, restart, grace, corruption and revocation tests |
-| Signed update metadata | Verified against included own-service fixture | Independent of game | Positive signature and altered-envelope rejection |
-| Trusted signed package update | Verification implemented; positive public-release path not tested | Independent of game | No trusted signing certificate or hosted release supplied |
+Development host: Windows 11 x64 build 26200, Visual Studio 2022/MSVC v143, Windows SDK 10.0.22621. No administrator privileges or security changes are part of normal operation.
 
-The compiled input allowlist contains only the named research build. Its status is partial/unverified, not Connected or Active. Any future build is unverified until a source change and renewed testing explicitly allow it. The engine capability set is empty.
+| Capability | Exact supported binary | Other binaries |
+|---|---|---|
+| Native UI, profiles, appearance, diagnostics | Available independently of gameplay | Available independently of gameplay |
+| Package/version detection | Verified through Windows package APIs | Detection only |
+| Reach / targeting Hitbox | Native ray query and dispatch, accepted private-world hit/damage tests | Refused |
+| Aim Assist | Qualified input-camera steering, independent axes and condition tests | Refused |
+| Velocity | Local incoming-motion receive binding and observed component/trajectory tests | Refused |
+| Timer | Local clock field ownership/restoration, measured actor ticks | Refused |
+| Zoom / Auto 360 | Tagged camera FOV and yaw, live observations | Refused |
+| Clicker / contextual mining | Native handlers; separate schedule and game counters | Refused |
+| Walk / Sprint / S-Tap | Foreground/world-gated configured keys; see validation | Refused |
+| Own license/vault, signed metadata | Independent of game | Independent of game |
 
-No supplied material establishes safe current engine layouts or exact proprietary behavior. The modern ModBase reference explicitly targets 26.52, and the archived Horion SDK is from 2021. No offsets, signatures or code from those projects are executed in Minecraft. Broader source research did not establish a verified 26.60 engine adapter suitable for this clean-room implementation.
+Read [validation](VALIDATION.md) for actual coverage. A bound handler does not promise server acceptance. Local Timer does not control server TPS. Server authority can correct motion. LOS conservatively treats non-fluid block voxels as occluders, including glass and partial blocks.
 
-Physical-device tests at swapped-button settings, game-world input acknowledgment, supported engine module effects, GPU/vendor combinations, actual driver removal, reboot, fresh user/clean VM, and 100/125/150/200% Windows DPI are **not** established by the native fixture. See VERIFICATION.md; the app does not claim these tests passed.
+Other versions require a researched port, an updated exact hash/version allowlist and renewed testing. Historical SDK references do not establish broad support. No kernel component, anti-cheat bypass or copied Nitro implementation is included.

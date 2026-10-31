@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include "core/planner.h"
 #include "diagnostics/log.h"
+#include "integration/engine.h"
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -9,6 +10,17 @@
 #include <thread>
 
 namespace aster {
+class InputTimingSession {
+public:
+    explicit InputTimingSession(bool active=true);
+    ~InputTimingSession();
+    void active(bool);
+private:
+    bool active_=false,period_=false,policySaved_=false;
+    PROCESS_POWER_THROTTLING_STATE previous_{};
+    InputTimingSession(const InputTimingSession&)=delete;
+    InputTimingSession& operator=(const InputTimingSession&)=delete;
+};
 std::wstring wide(std::string_view text);
 std::string utf8(std::wstring_view text);
 std::string keyName(const Keybind& key);
@@ -21,6 +33,7 @@ bool trustedExecutable(const std::filesystem::path& path,std::string_view requir
 void copyText(HWND window,std::string_view text);
 bool windowBelongsTo(HWND window,DWORD pid);
 bool cursorCapturedFor(HWND window);
+bool gameplayCaptureReady(const GameSnapshot&,const EngineRuntime&);
 bool verifiedInputBuild(std::string_view build);
 
 class GameDetector {
@@ -59,7 +72,7 @@ public:
     ~InputService();
     void configure(const Profile&);
     bool arm();
-    void stop(std::string reason);
+    void stop(std::string reason,bool restoreForward=false);
     void setLicensed(bool);
     RuntimeStatus status()const;
     static bool sendEvent(const OutputEvent& event);
@@ -69,8 +82,13 @@ private:
     Diagnostics& log_;
     mutable std::mutex mutex_;
     std::condition_variable_any wake_;
-    Profile profile_;
+    std::shared_ptr<const Profile> profile_;
     RuntimeStatus status_;
+    std::uint64_t worldToken_=0;
+    bool restoreForward_=false;
+    std::array<std::uint64_t,3> keyRequests_{};
+    std::array<bool,3> keyApplied_{},keyConditions_{};
+    EngineService engine_;
     std::jthread worker_;
 };
 

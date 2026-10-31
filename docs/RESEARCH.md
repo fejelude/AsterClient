@@ -1,6 +1,6 @@
 # Source and evidence register
 
-Reviewed October 30, 2026. The supplied 27-page PDF was extracted in full and all 35 atlas screenshots on pages 18-26 were visually inspected. Local inspection material is excluded from release/source ZIPs. The PDF is the main behavioral guide, not authorization to copy proprietary assets or hidden protocols.
+Reviewed October 30–31, 2026. The supplied 27-page PDF was extracted in full and all 35 atlas screenshots on pages 18–26 were visually inspected. The later 23-page ASTER Bedrock Lab guide was also read and rendered. Local inspection material is excluded from release/source packages. The PDFs are the main behavioral guides; their instructions are distinguished from the user's authorization and do not grant a license to proprietary code, assets or protocols.
 
 | Source | Finding / decision |
 |---|---|
@@ -8,12 +8,14 @@ Reviewed October 30, 2026. The supplied 27-page PDF was extracted in full and al
 | [Dear ImGui pinned source](https://github.com/ocornut/imgui/tree/f5befd2d29e66809cd1110a152e375a7f1981f06) | 1.91.9b, MIT. Only this UI library and its official backends are included. |
 | [nlohmann/json pinned source](https://github.com/nlohmann/json/tree/55f93686c01528224f448c19128836e7df245f72) | 3.12.0, MIT. Strict typed loading plus explicit migration/default recovery. |
 | [Nitro site](https://nitr0.club/) and [README fork](https://github.com/v-irels/Nitro) | Product/reference descriptions; no complete independently licensed implementation or protocol is supplied. No binaries, endpoints, artwork or secrets copied. |
-| [MCBE DX12 ModBase](https://github.com/b01dev/MCBE_DX12_ModBase) | MIT architecture reference; explicitly version-scoped to Bedrock 26.52. It is not evidence for 1.26.6005.0 compatibility. No code imported. |
+| [MCBE DX12 ModBase pinned source](https://github.com/b01dev/MCBE_DX12_ModBase/tree/c0e9cf1ce5a6dde1d3cc6665e36a8ecd796e71cd) | MIT reference. Its customized EnTT headers are imported under `external/bedrock-sdk/entt` with pinned hashes, upstream EnTT and reference MIT notices. The general architecture was a reference; exact installed-build offsets, signatures, packet callbacks and camera bindings were researched independently. An old version label is not compatibility evidence. |
 | [Archived Horion](https://github.com/horionclient/Horion) | Archived December 2021; noncommercial license in the PDF. Historical architecture only, no code imported. |
 | [Limerence client](https://github.com/LimerenceMC/client) | GPL example reference. No code imported or linked. |
-| [Latite releases](https://github.com/LatiteClient/Latite/releases) | Additional current-version investigation: visible stable release supports 26.44; no verified 26.60 adapter established from it. No code imported. |
+| [Latite releases](https://github.com/LatiteClient/Latite/releases) | Additional architecture/version investigation. No code imported and no assumption that another client's release establishes this adapter's compatibility. |
 | [Minecraft official 26.60 changelog](https://www.minecraft.net/en-us/article/minecraft--bedrock-edition-26-60-changelog) | The public release name and Store package build are different strings. The app reads the package build instead of assuming equivalence. |
-| [Microsoft Bedrock server API](https://learn.microsoft.com/en-us/minecraft/creator/scriptapi/minecraft/server/minecraft-server) | Documented scripting context is not a universal substitute for game-process movement/combat hooks. No add-on is installed or claimed to implement those hooks. |
+| [Microsoft Bedrock server API](https://learn.microsoft.com/en-us/minecraft/creator/scriptapi/minecraft/server/minecraft-server) | Used for an original optional server-side observer pack in one disposable QA world. It measures accepted hits, damage, blocks, ticks and motion independently; it does not implement the production native client features and is not needed by the application. |
+| [LeviLamina GameMode declarations](https://docs.levimc.org/LeviLamina/api/d1/de8/GameMode_8h_source.html), [input-camera component declarations](https://docs.levimc.org/LeviLamina/api/da/d61/src-client_2mc_2deps_2minecraft__camera_2components_2CameraDirectLookComponent_8h_source.html), [motion payload declarations](https://github.com/LiteLDev/LeviLamina/blob/main/src/mc/network/packet/SetActorMotionPacketPayload.h) | Declaration/terminology references, followed by independent exact-executable ABI and live observation. GPL implementation source was not copied or linked into Aster. Relevant native arguments, component identity and offsets were validated separately; generic declarations alone do not establish the installed layout. |
+| [MinHook pinned source](https://github.com/TsudaKageyu/minhook/tree/v1.3.4) | Included under its permissive BSD license for normal user-mode callback instrumentation. No driver or anti-cheat bypass is included. |
 | [GetWindowThreadProcessId](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowthreadprocessid) | Window identity is checked with process/package/architecture metadata and foreground gating. |
 | [Credential storage](https://learn.microsoft.com/en-us/windows/win32/SecBP/handling-passwords) | Refresh sessions use CredWrite/CredRead, local-machine persistence under the logged-in user, not settings JSON. |
 | [RegisterHotKey](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey) | Global Hide and F9 stop use MOD_NOREPEAT and report collisions. Module toggles remain game-focused. |
@@ -23,14 +25,14 @@ Reviewed October 30, 2026. The supplied 27-page PDF was extracted in full and al
 
 ## Defined independent behavior
 
-The code does not silently infer proprietary algorithms. Independent CPS jitter is uniform interval scaling in `[0.88,1.12]`; mean requested interval remains `1/CPS`. Left priming mirrors the demonstrated right-priming rule and is labeled independent. Invert Clicks swaps logical output channels. Local numeric ranges not established by the PDF are conservative configuration bounds, documented by the setting definitions in `src/core/model.cpp`. None establishes an engine effect.
+The user explicitly approved independently researched behavior for undocumented settings. Independent CPS jitter is uniform interval scaling in `[0.88,1.12]`; mean requested interval remains `1/CPS`. Left priming mirrors the demonstrated right-priming rule and is labeled independent. Invert Clicks swaps logical output channels. Tuner is host polling frequency; Auto/Legit preserve normal mining with immediate/250 ms hold policy; S-Tap is an observed-attack 60 ms backward tap; Auto 360 completes a weighted-direction yaw turn in real time. The complete units, precedence and gates are in [RUNTIME_CONTRACT.md](RUNTIME_CONTRACT.md), with numeric bounds in `src/core/model.cpp`.
 
 The two unclear opacity controls have explicit independent roles: control-panel opacity and background texture opacity. Image Speed drives original contour animation; imported bitmaps remain still. Anti OBS is explicitly unsupported. Discord/Vouch controls are explicitly unavailable because no destination exists for this independent app.
 
-## Remaining evidence needed
+The supplied optional Nitro executable was inspected statically as a reference, never executed. No Nitro code, assets, binary fragments, secrets or paid-service protocols are included. Game-process research artifacts and disassembly are excluded from source and portable packages.
 
-- A verified, appropriately licensed engine integration for the exact installed game build, or a complete independently researched and tested port.
-- Measured target selection, reach/server authority, velocity/knockback timing, timer targets, camera restoration and hitbox semantics.
-- A demonstrated definition or agreed independent design for Tuner, block-breaking modes, Auto S-Tap, Auto 360 units, Zoom factor and undisclosed filtering rules.
-- Reproducible before/after observations in disposable private worlds, including failure/cleanup cases and performance at multiple frame rates.
-- Owner-operated production service/URLs and a trusted publisher certificate for commercial release operations.
+## Evidence and scope
+
+The main application now uses an independently implemented adapter for the exact package/version/SHA-256 in [COMPATIBILITY.md](COMPATIBILITY.md). Measured targeting, Aim, knockback callback values, Timer, FOV, spins, mining, main-controller stop behavior and performance are recorded in [VALIDATION.md](VALIDATION.md). Source permissions and hashes are recorded in `dependencies.lock.json` and `LICENSES/`.
+
+Coverage remains limited to the named binary, host and scenarios. Full physical S-Tap/Sprint input, the final right-click placement revision, multi-player filtering and every modifier combination were not all exercised in-game. Proprietary algorithm parity is not established. Owner-operated production endpoints and a trusted publisher certificate remain external prerequisites for commercial service operations, separate from the implemented local application.

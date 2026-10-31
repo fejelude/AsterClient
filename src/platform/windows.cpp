@@ -5,6 +5,7 @@
 #include <wincrypt.h>
 #include <wintrust.h>
 #include <softpub.h>
+#include <mmsystem.h>
 #include <algorithm>
 #include <chrono>
 #include <cctype>
@@ -12,6 +13,21 @@
 #include <stdexcept>
 
 namespace aster {
+InputTimingSession::InputTimingSession(bool enabled){
+    previous_.Version=PROCESS_POWER_THROTTLING_CURRENT_VERSION;
+    policySaved_=GetProcessInformation(GetCurrentProcess(),ProcessPowerThrottling,&previous_,sizeof(previous_))!=FALSE;
+    active(enabled);
+}
+InputTimingSession::~InputTimingSession(){active(false);}
+void InputTimingSession::active(bool enabled){
+    if(enabled==active_)return;
+    if(enabled){
+        if(policySaved_){auto policy=previous_;policy.ControlMask|=PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION;policy.StateMask&=~PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION;SetProcessInformation(GetCurrentProcess(),ProcessPowerThrottling,&policy,sizeof(policy));}
+        period_=timeBeginPeriod(1)==TIMERR_NOERROR;active_=true;
+    }else {
+        if(period_)timeEndPeriod(1);if(policySaved_)SetProcessInformation(GetCurrentProcess(),ProcessPowerThrottling,&previous_,sizeof(previous_));active_=period_=false;
+    }
+}
 namespace {
 constexpr ULONG_PTR kInputMarker=0x41535452;
 struct Handle {
@@ -45,6 +61,7 @@ GameSnapshot inspect(DWORD pid){
     std::wstring path(32768,L'\0');DWORD chars=static_cast<DWORD>(path.size());
     if(!QueryFullProcessImageNameW(process.value,0,path.data(),&chars)){g.detail="Cannot verify game image path.";return g;}
     path.resize(chars);
+    g.imagePath=utf8(path);
     if(_wcsicmp(std::filesystem::path(path).filename().c_str(),L"Minecraft.Windows.exe")!=0){g.detail="Unexpected game image.";return g;}
     UINT32 length=0;LONG code=GetPackageFamilyName(process.value,&length,nullptr);
     if(code!=ERROR_INSUFFICIENT_BUFFER){g.detail="Game is not the expected Microsoft Store package.";return g;}
@@ -70,7 +87,7 @@ GameSnapshot inspect(DWORD pid){
     auto hwnd=findGameWindow(pid);g.window=reinterpret_cast<std::uintptr_t>(hwnd);
     g.foreground=windowBelongsTo(GetForegroundWindow(),pid);g.cursorCaptured=cursorCapturedFor(hwnd);
     g.detail=!g.x64?"Architecture is unsupported":!g.identityVerified?"Build identity could not be verified":
-        !hwnd?"Game identified; waiting for its window":verifiedInputBuild(g.build)?"Game detected; input bridge partial, engine adapter unavailable":
+        !hwnd?"Game identified; waiting for its window":verifiedInputBuild(g.build)?"Verified Store build detected; native adapter status is reported separately":
         "Untested game build; input and engine adapters are disabled";
     return g;
 }
@@ -187,6 +204,9 @@ bool cursorCapturedFor(HWND window){
     RECT intersection{};
     return IntersectRect(&intersection,&clip,&client)&&clip.left>=client.left-1&&clip.top>=client.top-1&&clip.right<=client.right+1&&clip.bottom<=client.bottom+1;
 }
+bool gameplayCaptureReady(const GameSnapshot& game,const EngineRuntime& engine){
+    return game.cursorCaptured||(engine.bound&&engine.worldReady&&engine.heartbeatAge<500&&engine.screen=="gameplay_captured");
+}
 bool verifiedInputBuild(std::string_view build){return build==kInputResearchBuild;}
 GameSnapshot GameDetector::detectOnce(){
     Handle list(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0));if(list.value==INVALID_HANDLE_VALUE){
@@ -242,7 +262,7 @@ LRESULT CALLBACK InputObserver::mouseProc(int code,WPARAM message,LPARAM data){
 LRESULT CALLBACK InputObserver::keyboardProc(int code,WPARAM message,LPARAM data){
     if(code==HC_ACTION&&instance_){
         auto event=reinterpret_cast<KBDLLHOOKSTRUCT*>(data);
-        if(!(event->flags&LLKHF_INJECTED)&&event->vkCode<256){
+        if((!(event->flags&LLKHF_INJECTED)||((event->vkCode==VK_F8||event->vkCode==VK_F9)&&event->dwExtraInfo!=kInputMarker))&&event->vkCode<256){
             int key=static_cast<int>(event->vkCode);bool down=message==WM_KEYDOWN||message==WM_SYSKEYDOWN;
             if(key==VK_SHIFT)key=static_cast<int>(MapVirtualKeyW(event->scanCode,MAPVK_VSC_TO_VK_EX));
             if(key==VK_CONTROL)key=event->flags&LLKHF_EXTENDED?VK_RCONTROL:VK_LCONTROL;
@@ -253,7 +273,7 @@ LRESULT CALLBACK InputObserver::keyboardProc(int code,WPARAM message,LPARAM data
             if(fresh){
                 ++s.eventSequence;unsigned modifiers=(s.keys[VK_MENU]?1u:0u)|(s.keys[VK_CONTROL]?2u:0u)|(s.keys[VK_SHIFT]?4u:0u);
                 if(instance_->presses_.size()<128)instance_->presses_.push_back({key,modifiers,s.eventSequence});
-                if(key=='T'||key==VK_RETURN||key==VK_ESCAPE||key==VK_OEM_2||key==VK_F9)++s.pauseSequence;
+                if(key=='T'||key==VK_RETURN||key==VK_ESCAPE||key==VK_OEM_2||key==VK_F9){++s.pauseSequence;s.pauseKey=key;}
             }
         }
     }return CallNextHookEx(nullptr,code,message,data);
@@ -261,6 +281,7 @@ LRESULT CALLBACK InputObserver::keyboardProc(int code,WPARAM message,LPARAM data
 PhysicalInput InputObserver::snapshot()const{std::lock_guard lock(mutex_);return state_;}
 std::vector<KeyPress> InputObserver::drainPresses(){std::lock_guard lock(mutex_);std::vector<KeyPress> result;result.swap(presses_);return result;}
 bool InputService::sendEvent(const OutputEvent& event){
+    if(event.kind==OutputKind::MouseDown||event.kind==OutputKind::MouseUp){INPUT e{};e.type=INPUT_MOUSE;e.mi.dwExtraInfo=kInputMarker;e.mi.dwFlags=event.code?(event.kind==OutputKind::MouseDown?MOUSEEVENTF_RIGHTDOWN:MOUSEEVENTF_RIGHTUP):(event.kind==OutputKind::MouseDown?MOUSEEVENTF_LEFTDOWN:MOUSEEVENTF_LEFTUP);return SendInput(1,&e,sizeof(e))==1;}
     if(event.kind==OutputKind::Click){
         INPUT events[3]{};const DWORD down=event.code?MOUSEEVENTF_RIGHTDOWN:MOUSEEVENTF_LEFTDOWN;
         const DWORD up=event.code?MOUSEEVENTF_RIGHTUP:MOUSEEVENTF_LEFTUP;
@@ -274,53 +295,83 @@ bool InputService::sendEvent(const OutputEvent& event){
     e.ki.dwFlags=KEYEVENTF_SCANCODE|(event.kind==OutputKind::KeyUp?KEYEVENTF_KEYUP:0u)|((scan&0xFF00u)?KEYEVENTF_EXTENDEDKEY:0u);
     return e.ki.wScan&&SendInput(1,&e,sizeof(INPUT))==1;
 }
-InputService::InputService(GameDetector& d,InputObserver& o,Diagnostics& l):detector_(d),observer_(o),log_(l),profile_(defaultProfile()),worker_([this](std::stop_token token){
-    InputPlanner planner;auto start=std::chrono::steady_clock::now();std::uint64_t pause=observer_.snapshot().pauseSequence;
+InputService::InputService(GameDetector& d,InputObserver& o,Diagnostics& l):detector_(d),observer_(o),log_(l),profile_(std::make_shared<const Profile>(defaultProfile())),engine_(d,l),worker_([this](std::stop_token token){
+    InputPlanner planner;InputTimingSession timing(false);std::array<bool,2> mining{};auto start=std::chrono::steady_clock::now();std::uint64_t pause=observer_.snapshot().pauseSequence;
+    Handle timer(CreateWaitableTimerExW(nullptr,nullptr,CREATE_WAITABLE_TIMER_HIGH_RESOLUTION,TIMER_ALL_ACCESS));
+    if(!timer.value)timer.value=CreateWaitableTimerW(nullptr,FALSE,nullptr);
     while(!token.stop_requested()){
-        Profile config;RuntimeStatus status;{std::lock_guard lock(mutex_);config=profile_;status=status_;}
+        std::shared_ptr<const Profile> snapshot;RuntimeStatus status;std::uint64_t worldToken;bool restoreForward;{std::lock_guard lock(mutex_);snapshot=profile_;status=status_;worldToken=worldToken_;restoreForward=restoreForward_;}const auto& config=*snapshot;
         auto physical=observer_.snapshot();auto game=detector_.snapshot();
+        auto engine=engine_.status();
+        timing.active(status.armed);
+        if(status.armed&&engine.world!=worldToken){stop("Minecraft world changed. Press F8 in-world to resume.");status.armed=false;}
+        if(status.armed&&(!engine.worldReady||engine.screen!="gameplay_captured")){stop("Minecraft world or screen changed. Press F8 in-world to resume.");status.armed=false;}
         if(status.armed&&physical.pauseSequence!=pause){stop("Input paused for chat/menu key. Press F8 in-world to resume.");status.armed=false;}
+        const bool screenInterrupted=physical.pauseSequence!=pause&&physical.pauseKey!=VK_F9;
         pause=physical.pauseSequence;
         if(status.armed&&(!game.foreground||!game.identityVerified||!game.x64||!verifiedInputBuild(game.build))){
             stop("Focus or game identity changed. Press F8 in-world to resume.");status.armed=false;}
-        if(status.armed&&config.requireCapturedCursor&&!game.cursorCaptured){stop("Minecraft released the cursor. Press F8 in-world to resume.");status.armed=false;}
+        if(status.armed&&config.requireCapturedCursor&&!gameplayCaptureReady(game,engine)){stop("Minecraft released gameplay capture. Press F8 in-world to resume.");status.armed=false;}
         InputGate gate{status.armed,game.identityVerified&&game.x64&&verifiedInputBuild(game.build)&&game.window!=0,
-                       game.foreground,!config.requireCapturedCursor||game.cursorCaptured,status.licensed&&status.inputHealthy&&observer_.healthy()};
+                       game.foreground,!config.requireCapturedCursor||gameplayCaptureReady(game,engine),status.licensed&&status.inputHealthy&&observer_.healthy()};
         double now=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();
-        auto events=planner.tick(now,config,physical,gate);
+        InputContext context{engine.worldReady&&engine.screen=="gameplay_captured",engine.blockTarget,engine.entityTarget,engine.blockToken,engine.attackCalls};
+        context.restorePhysical=restoreForward&&!screenInterrupted&&game.foreground&&context.worldReady&&engine.world==worldToken;
+        auto events=planner.tick(now,config,physical,gate,context);
         for(const auto& event:events){
-            if(event.kind!=OutputKind::KeyUp){
+            if(event.kind!=OutputKind::KeyUp&&event.kind!=OutputKind::MouseUp){
                 auto fresh=detector_.snapshot();bool stillArmed;{std::lock_guard lock(mutex_);stillArmed=status_.armed&&status_.licensed;}
-                if(!stillArmed||!fresh.foreground||(!fresh.cursorCaptured&&config.requireCapturedCursor))break;
+                if((!stillArmed&&!(event.module=="physical_restore"&&context.restorePhysical))||!fresh.foreground||(!gameplayCaptureReady(fresh,engine_.status())&&config.requireCapturedCursor))break;
             }
             if(event.kind==OutputKind::Click){std::lock_guard lock(mutex_);++status_.requested[event.code];}
-            bool ok=sendEvent(event);
+            const bool native=(event.kind==OutputKind::Click||event.kind==OutputKind::MouseDown||event.kind==OutputKind::MouseUp)&&engine.bound;
+            if(native&&event.kind==OutputKind::MouseDown)mining[event.code]=true;
+            if(event.kind==OutputKind::MouseUp)mining[event.code]=false;
+            bool ok=native||sendEvent(event);
             {std::lock_guard lock(mutex_);
-                if(ok&&event.kind==OutputKind::Click)++status_.sent[event.code];
+                if(ok&&event.kind==OutputKind::Click){if(native)++status_.queued[event.code];else ++status_.sent[event.code];}
+                if(ok&&event.kind==OutputKind::KeyDown){const char* ids[]={"walk","sprint","stap"};for(unsigned n=0;n<3;++n)if(event.module==ids[n])++keyRequests_[n];}
                 if(!ok){++status_.failures;status_.inputHealthy=false;status_.armed=false;status_.stopReason="Windows rejected an input event; paused.";}}
             if(!ok){log_.event(event.module,"INPUT_SEND_FAILED","Windows rejected synthesized input; scheduler paused.");
                 for(const auto& release:planner.stop(observer_.snapshot()))sendEvent(release);break;}
         }
-        std::unique_lock lock(mutex_);wake_.wait_for(lock,token,std::chrono::milliseconds(status_.armed?2:16),[]{return false;});
+        {std::lock_guard lock(mutex_);
+            keyApplied_={config.modules.at("walk").enabled&&planner.ownsKey(config.movement[0]),config.modules.at("sprint").enabled&&planner.ownsKey(config.movement[4]),config.modules.at("stap").enabled&&planner.ownsKey(config.movement[2])};
+            keyConditions_={config.modules.at("walk").enabled,config.modules.at("sprint").enabled&&(physical.keys[config.movement[0]]||config.modules.at("walk").enabled)&&!keyApplied_[2],config.modules.at("stap").enabled&&physical.keys[config.movement[0]]&&!physical.keys[config.movement[2]]};
+            engine_.input(physical,status_.armed,status_.licensed,status_.queued,mining,worldToken_);status=status_;}
+        const auto requested=config.modules.at("clicker").number("tuner");
+        const bool lowCpuZoom=config.modules.at("zoom").enabled&&config.modules.at("zoom").flag("lowCpuMode")&&!config.modules.at("clicker").enabled&&!config.modules.at("stap").enabled&&!config.modules.at("walk").enabled&&!config.modules.at("sprint").enabled;
+        const double hz=status.armed?(lowCpuZoom?100.:(requested>0?std::clamp(requested,50.,1000.):1000.)):60.;
+        if(timer.value){LARGE_INTEGER due;due.QuadPart=-static_cast<LONGLONG>(10000000./hz);if(SetWaitableTimerEx(timer.value,&due,0,nullptr,nullptr,nullptr,0))WaitForSingleObject(timer.value,25);else Sleep(1);}
+        else {std::unique_lock lock(mutex_);wake_.wait_for(lock,token,std::chrono::milliseconds(status_.armed?1:16),[]{return false;});}
     }
     for(const auto& release:planner.stop(observer_.snapshot()))sendEvent(release);
-}){}
+}){engine_.configure(*profile_);}
 InputService::~InputService(){worker_.request_stop();wake_.notify_all();if(worker_.joinable())worker_.join();}
-void InputService::configure(const Profile& p){std::lock_guard lock(mutex_);profile_=p;wake_.notify_all();}
+void InputService::configure(const Profile& p){auto next=std::make_shared<const Profile>(p);{std::lock_guard lock(mutex_);profile_=std::move(next);wake_.notify_all();}engine_.configure(p);}
 bool InputService::arm(){
     auto g=detector_.snapshot();std::lock_guard lock(mutex_);
     if(!g.foreground||!g.identityVerified||!g.x64||!verifiedInputBuild(g.build)||!g.window){status_.stopReason="Switch to a verified Minecraft build and press F8 in-world.";return false;}
-    if(profile_.requireCapturedCursor&&!g.cursorCaptured){status_.stopReason="Open a private world and capture the mouse, then press F8.";return false;}
+    auto engine=engine_.status();if(!engine.worldReady||engine.screen!="gameplay_captured"){status_.stopReason=engine.detail;return false;}
+    if(profile_->requireCapturedCursor&&!gameplayCaptureReady(g,engine)){status_.stopReason="Resume a private world with native gameplay capture, then press F8.";return false;}
     if(!status_.licensed||!observer_.healthy()){status_.stopReason="Input observer or own-service entitlement unavailable.";return false;}
-    status_.armed=true;status_.inputHealthy=true;status_.stopReason="Input armed; game effect remains unverified.";wake_.notify_all();
+    worldToken_=engine.world;restoreForward_=false;status_.armed=true;status_.inputHealthy=true;status_.stopReason="Input armed for this Minecraft world.";wake_.notify_all();
     log_.event("input","INPUT_ARMED","User armed foreground-gated input for private-world validation.");return true;
 }
-void InputService::stop(std::string reason){
-    bool wasArmed;{std::lock_guard lock(mutex_);wasArmed=status_.armed;status_.armed=false;status_.stopReason=std::move(reason);wake_.notify_all();}
+void InputService::stop(std::string reason,bool restoreForward){
+    bool wasArmed;{std::lock_guard lock(mutex_);wasArmed=status_.armed;status_.armed=false;restoreForward_=restoreForward;status_.stopReason=std::move(reason);wake_.notify_all();}
     if(wasArmed)log_.event("input","INPUT_STOPPED","Input canceled; owned keys are being released.");
 }
 void InputService::setLicensed(bool value){std::lock_guard lock(mutex_);status_.licensed=value;if(!value){status_.armed=false;status_.stopReason="Own-service license unavailable.";}wake_.notify_all();}
-RuntimeStatus InputService::status()const{std::lock_guard lock(mutex_);return status_;}
+RuntimeStatus InputService::status()const{
+    RuntimeStatus result;std::array<std::uint64_t,3> requests;std::array<bool,3> applied,conditions;std::shared_ptr<const Profile> profile;
+    {std::lock_guard lock(mutex_);result=status_;requests=keyRequests_;applied=keyApplied_;conditions=keyConditions_;profile=profile_;}
+    result.engine=engine_.status();const char* ids[]={"walk","sprint","stap"};
+    for(unsigned n=0;n<3;++n){auto& evidence=result.engine.modules[moduleIndex(ids[n])];evidence.bound=evidence.bound&&observer_.healthy();evidence.requested=profile->modules.at(ids[n]).enabled;
+        evidence.conditions=conditions[n]&&result.armed&&result.engine.permitted;evidence.applied=applied[n]&&evidence.conditions&&result.inputHealthy;evidence.requests=requests[n];evidence.observations=0;
+        evidence.reason=!evidence.bound?"Input handler or native world adapter unavailable":!result.armed||!result.engine.permitted?result.stopReason:!evidence.conditions?"Waiting for physical movement/attack conditions":evidence.applied?"Configured Windows key held; game motion is measured separately":"Input handler ready; Windows output and game motion are separate evidence";}
+    return result;
+}
 Hotkeys::Hotkeys(HWND window):window_(window){panicOk_=RegisterHotKey(window_,PanicId,MOD_NOREPEAT,VK_F9)!=FALSE;}
 Hotkeys::~Hotkeys(){if(hideRegistered_)UnregisterHotKey(window_,HideId);if(panicOk_)UnregisterHotKey(window_,PanicId);}
 bool Hotkeys::configureHide(const Keybind& key){

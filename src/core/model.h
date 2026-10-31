@@ -6,13 +6,14 @@
 #include <string_view>
 #include <variant>
 #include <vector>
+#include "core/runtime.h"
 
 namespace aster {
 inline constexpr char kVersion[] = "0.1.0-dev";
 inline constexpr int kSchemaVersion = 3;
 inline constexpr std::string_view kInputResearchBuild = "1.26.6005.0";
 enum class ConnectionState { LookingForGame, Detected, CheckingCompatibility, Connected, Failed };
-enum class ModuleState { Disabled, EnabledOffline, Initializing, InputRunningUnverified, Active, Unsupported, Failed };
+enum class ModuleState { Disabled, EnabledOffline, Initializing, InputRunningUnverified, Active, Unsupported, Failed, Bound, Requested, Observed };
 enum class SupportState { Unknown, Supported, Partial, Unsupported };
 enum class SettingKind { Number, Boolean };
 enum class Capability { Engine, ClickInput, WalkInput, SprintInput };
@@ -98,7 +99,7 @@ struct GameSnapshot {
     std::uint32_t pid = 0;
     std::uint64_t creationTime = 0;
     std::uintptr_t window = 0;
-    std::string build, packageFamily, detail = "Looking for Minecraft";
+    std::string build, packageFamily, imagePath, detail = "Looking for Minecraft";
     ConnectionState state = ConnectionState::LookingForGame;
 };
 struct ModuleHealth {
@@ -109,9 +110,10 @@ struct ModuleHealth {
 };
 struct RuntimeStatus {
     bool armed = false, licensed = true, inputHealthy = true;
-    std::array<std::uint64_t,2> requested{}, sent{}, acknowledged{};
+    std::array<std::uint64_t,2> requested{}, queued{}, sent{}, acknowledged{};
     std::uint64_t failures = 0;
     std::string stopReason = "Press F8 in Minecraft to arm input. F9 always stops.";
+    EngineRuntime engine;
 };
 ModuleHealth computeHealth(const ModuleDefinition&, const ModuleConfig&, const GameSnapshot&, const RuntimeStatus&);
 std::string_view stateName(ModuleState);

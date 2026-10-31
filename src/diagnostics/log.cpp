@@ -40,14 +40,20 @@ std::string Diagnostics::report(const Profile& p,const GameSnapshot& game,const 
     Json modules=Json::object();
     for(const auto& d:moduleDefinitions()){
         auto health=computeHealth(d,p.modules.at(d.id),game,runtime);
+        const auto& evidence=runtime.engine.modules.at(moduleIndex(d.id));
         modules[d.id]={{"requested",health.enabledByUser},{"state",stateName(health.state)},
-            {"code",health.code},{"detail",health.detail}};
+            {"code",health.code},{"detail",health.detail},{"adapterBound",evidence.bound},{"conditionsMet",evidence.conditions},
+            {"applied",evidence.applied},{"handlerRequests",evidence.requests},{"observations",evidence.observations},
+            {"appliedValue",evidence.appliedValue},{"observedValue",evidence.observedValue}};
     }
     Json report={{"app","Aster Client"},{"version",kVersion},{"createdUtc",utcNow()},
         {"game",{{"present",game.present},{"identityVerified",game.identityVerified},{"x64",game.x64},
                  {"build",game.build},{"foreground",game.foreground},{"cursorCaptured",game.cursorCaptured}}},
-        {"input",{{"armed",runtime.armed},{"requestedClicks",runtime.requested},{"windowsAcceptedClicks",runtime.sent},
-                  {"gameAcknowledgments",nullptr},{"failures",runtime.failures}}},
+        {"input",{{"armed",runtime.armed},{"requestedClicks",runtime.requested},{"nativeQueuedClicks",runtime.queued},{"windowsAcceptedClicks",runtime.sent},
+                  {"gameAcknowledgments",runtime.engine.bound?Json(runtime.engine.attackCalls):Json(nullptr)},{"failures",runtime.failures}}},
+        {"adapter",{{"bound",runtime.engine.bound},{"worldReady",runtime.engine.worldReady},{"permitted",runtime.engine.permitted},
+                    {"screen",runtime.engine.screen},{"exactExecutableSha256",runtime.engine.sha256},{"protocol",runtime.engine.buildProtocol},
+                    {"measuredLocalTps",runtime.engine.worldReady?Json(runtime.engine.localTps):Json(nullptr)},{"heartbeatAgeMs",runtime.engine.heartbeatAge}}},
         {"modules",modules},{"events",recent()},
         {"privacy","No keys, tokens, file paths, input history, account names or machine identifiers included."}};
     return report.dump(2);

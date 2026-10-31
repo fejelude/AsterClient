@@ -1,22 +1,22 @@
 # Aster Client - native Bedrock client lab
 
-Source upload: see [current snapshot status](docs/SNAPSHOT_STATUS.md) for the experimental bridge work and remaining validation.
+See the [runtime contract](docs/RUNTIME_CONTRACT.md) for setting semantics and the [validation report](docs/VALIDATION.md) for measured coverage.
 
-An original Windows 11 x64 development build guided by the supplied Nitro clean-room specification. It uses C++20, Win32, Direct3D 11 and Dear ImGui. No Nitro binaries, secrets, branding assets, license endpoints, engine offsets or noncommercial/GPL client code are included.
+An original Windows 11 x64 application guided by the supplied Nitro clean-room specification and ASTER feature guide. It uses C++20, Win32, Direct3D 11 and Dear ImGui, with an independently researched native adapter for one exact Bedrock executable. No Nitro binaries, branding assets, secrets or paid-service protocols are included.
 
-**This is a tested native development milestone, not a completed Nitro gameplay replacement.** Reach, Aim Assist, Hitbox, Velocity, Timer, Zoom, Auto 360 and Auto S-Tap have no verified game integration and are explicitly marked unsupported. A configured switch never means the game effect was verified.
+The adapter supports Microsoft Store x64 package build **1.26.6005.0**, executable SHA-256 `988f6a61403b4381aa41e6c66d64cce441b14e561a9b10f647c2758ef3f2672a`. Other executables fail closed. Configuration, native action, observed component state and server acceptance are distinct; a saved switch never establishes a gameplay result.
 
 ## Run
 
-Open `AsterClient.exe` from the portable release folder. No installer, administrator privileges, VC runtime installation, game injection or system configuration change is needed. Keep the accompanying documentation and notices with the executable.
+Keep **AsterClient.exe and AsterBridge.dll together** in the portable folder and launch AsterClient. The app verifies Minecraft's identity and executable hash, then loads its bridge through the normal Windows loader. No installer, administrator privileges, driver or security-setting changes are required. Keep the accompanying documentation and notices.
 
 - Settings auto-save after editing pauses. `Ctrl+S` and **Plugs > SAVE CONFIG** explicitly save.
 - `F10` hides/restores the window by default. The tray icon also restores it. Hide may be unbound or changed.
-- `F8`, pressed physically inside Minecraft, arms/disarms experimental input. `F9` stops it. All modules start disabled in a new profile.
+- `F8` inside Minecraft explicitly arms/disarms the current world. `F9` stops effects even while the client is hidden. All modules start disabled in a new profile.
 - The input session pauses on focus loss, game exit, cursor release and common chat/menu keys. A held mouse button must be released and pressed again after arming.
 - Input output is restricted to the verified Store package identity, x64 architecture and research build `1.26.6005.0`. A new game build fails closed.
-- The input bridge implements hold-to-repeat left/right CPS, priming, interval randomization, logical click inversion, Auto Walk and Sprint using your movement-key map. Windows input delivery is tested; **Minecraft acceptance and gameplay effects remain unverified**.
-- Tuner, Triggerbot and both block-breaking modes are disabled with explanations. Their behavior is not established by the PDF.
+- The bridge implements Reach, virtual targeting Hitbox, camera Aim Assist, incoming-motion Velocity, local Timer, Zoom, Auto 360, native left/right actions and contextual mining. The host schedules CPS/priming/randomization/inversion/Triggerbot and configured Walk/Sprint/S-Tap keys. Read the contract for units and precedence.
+- Tuner controls host polling in Hz, with a temporary process-owned timer request while armed. Auto and Legit mining retain normal Bedrock breaking time. Server authority can reject or correct client actions; local Timer does not change server TPS.
 
 Do private-world validation before using experimental input. Open Minecraft's key settings and match the app's movement map. No automatic action starts merely because Minecraft is detected. There is no anti-cheat or screen-capture evasion.
 
@@ -62,6 +62,6 @@ The update checker verifies signed metadata, SHA-256 and a trusted Authenticode 
 
 ## Verification and limitations
 
-Read [implementation status](docs/IMPLEMENTATION_STATUS.md), [compatibility](docs/COMPATIBILITY.md), [requirements traceability](docs/REQUIREMENTS.md), and [verification report](docs/VERIFICATION.md). The report separates automated tests, live UI checks, Windows input tests and unperformed in-world tests. No supplied material establishes exact proprietary gameplay algorithms; unsupported capability labels are deliberate, not hidden success claims.
+Read [implementation status](docs/IMPLEMENTATION_STATUS.md), [compatibility](docs/COMPATIBILITY.md), [requirements traceability](docs/REQUIREMENTS.md), and [validation report](docs/VALIDATION.md). Validation separates mathematical/platform tests, main-client tests, native runtime measurements and independent world events. Proprietary algorithm parity and universal multiplayer acceptance are not established by these tests.
 
 The development release is **unsigned**. Verify the published SHA-256 manifest. A trusted publisher certificate is required before a public signed release; no trust-store or antivirus settings are changed.

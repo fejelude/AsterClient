@@ -1,0 +1,16 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Aster private-world QA",
+    "description": "Independent server-side observations for the disposable Aster validation world only.",
+    "uuid": "cbf4267e-3c6b-4f34-9900-4b6f77920716",
+    "version": [0, 1, 0],
+    "min_engine_version": [1, 21, 90]
+  },
+  "modules": [{
+    "type": "script", "language": "javascript",
+    "uuid": "9c7ecea3-f42b-47f2-95d6-f628789db024",
+    "version": [0, 1, 0], "entry": "scripts/main.js"
+  }],
+  "dependencies": [{"module_name": "@minecraft/server", "version": "2.0.0"}]
+}

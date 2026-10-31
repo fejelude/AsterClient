@@ -14,6 +14,7 @@ struct ActorOwnerComponent {void* actor;};
 struct ActorTypeComponent {std::int32_t type;};
 struct RuntimeIDComponent {std::uint64_t id;};
 struct IsDeadFlagComponent {};
+struct MobHurtTimeComponent {std::int32_t hurtTime;};
 namespace aster::bridge {
 constexpr entt::id_type componentHash(const char* name){std::uint32_t hash=2166136261u;while(*name){hash^=static_cast<unsigned char>(*name++);hash*=16777619u;}return hash;}
 }
@@ -25,4 +26,5 @@ ASTER_COMPONENT_ID(ActorOwnerComponent)
 ASTER_COMPONENT_ID(ActorTypeComponent)
 ASTER_COMPONENT_ID(RuntimeIDComponent)
 ASTER_COMPONENT_ID(IsDeadFlagComponent)
+ASTER_COMPONENT_ID(MobHurtTimeComponent)
 #undef ASTER_COMPONENT_ID

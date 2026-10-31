@@ -1,4 +1,6 @@
 #include "auth/license.h"
+#include "core/engine_math.h"
+#include "integration/engine.h"
 #include <Windows.h>
 #include <wincred.h>
 #include <algorithm>
@@ -64,13 +66,48 @@ int main(int argc,char** argv){
             s.test("Signed offline grace while own service is stopped",[&]{LicenseClient resumed(config,log);auto state=waitLicense(resumed);require(state.state==LicenseState::OfflineGrace,state.detail.c_str());require(state.entitled());resumed.forget();require(waitLicense(resumed).state==LicenseState::NotActivated);});
         }
     }else{
+        s.test("Fresh native gameplay capture works without a Win32 cursor clip",[]{
+            GameSnapshot game;EngineRuntime engine;require(!gameplayCaptureReady(game,engine));
+            engine.bound=engine.worldReady=true;engine.screen="gameplay_captured";require(gameplayCaptureReady(game,engine));
+            engine.heartbeatAge=500;require(!gameplayCaptureReady(game,engine));engine.heartbeatAge=0;
+            engine.screen="input_released";require(!gameplayCaptureReady(game,engine));engine.screen="gameplay_captured";engine.worldReady=false;require(!gameplayCaptureReady(game,engine));
+            game.cursorCaptured=true;require(gameplayCaptureReady(game,engine));
+        });
         s.test("Every module starts disabled and no engine capability reports active",[]{
             auto p=defaultProfile();GameSnapshot game;game.present=game.identityVerified=game.foreground=game.x64=true;game.build="1.26.6005.0";
             RuntimeStatus runtime;runtime.armed=true;
             for(const auto& d:moduleDefinitions()){auto& m=p.modules.at(d.id);require(!m.enabled);m.enabled=true;auto h=computeHealth(d,m,game,runtime);
                 require(h.state!=ModuleState::Active);if(d.capability==Capability::Engine)require(h.state==ModuleState::Unsupported);}
         });
-        s.test("Timer calculations at boundaries and the 1.06x discrepancy",[]{expectNear(timerTps(1),20);expectNear(timerTps(5),100);expectNear(timerBoost(1.06),6);expectNear(timerTps(0),20);expectNear(timerBoost(9),400);});
+        s.test("Timer calculations include slow motion and the 1.06x discrepancy",[]{expectNear(timerTps(1),20);expectNear(timerTps(5),100);expectNear(timerBoost(1.06),6);expectNear(timerTps(.8),16);expectNear(timerBoost(.8),-20);expectNear(timerTps(0),2);expectNear(timerBoost(9),400);});
+        s.test("Ray geometry distinguishes nearest-point distance, edge hits and behind-camera targets",[]{
+            Box b{{-.3,-1,5},{.3,1,5.6}};expectNear(*rayBox({0,0,0},{0,0,1},b,5.2),5.);require(!rayBox({0,0,0},{0,0,1},b,4.99));
+            require(!rayBox({1,0,0},{0,0,1},b,10));auto expanded=targetingBox(b,2.22);expectNear(*rayBox({1,0,0},{0,0,1},expanded,10),4.19);
+            expectNear(nearestDistance({0,0,0},b),5);require(!rayBox({0,0,6},{0,0,1},b,10));require(rayBox({.3,0,0},{0,0,1},b,10).has_value());
+            require(!rayBox({0,0,0},{0,0,1},{{1,1,1},{-1,-1,-1}},10));
+        });
+        s.test("Knockback axes, delta composition and backward projection are independent",[]{
+            auto a=scaledImpulse({.2,.1,0},{1,.5,-1},.5,.25,false,false,0);expectNear(a.x,.6);expectNear(a.y,.2);expectNear(a.z,-.5);
+            a=scaledImpulse({.2,.1,0},{1,.5,-1},.5,.25,true,false,0);expectNear(a.x,.5);expectNear(a.y,.125);
+            a=scaledImpulse({},{1,.5,-1},1,1,false,true,0);expectNear(a.x,1);expectNear(a.z,0);expectNear(a.y,.5);
+        });
+        s.test("Aim smoothing preserves pitch in horizontal mode and respects the inner dead zone",[]{
+            auto a=aimCorrection({179,17},{-170,-30},25,false,.016,true,false,.02);require(a.yaw!=179);expectNear(a.pitch,17);
+            auto b=aimCorrection({0,5},{.5,5},25,false,.016,true,true,.02);expectNear(b.yaw,0);expectNear(b.pitch,5);
+            auto fast=aimCorrection({0,0},{60,0},0,false,.016,true,false,0),slow=aimCorrection({0,0},{60,0},100,false,.016,true,false,0);require(fast.yaw>slow.yaw);
+        });
+        s.test("Runtime status requires a bound handler, live conditions and measured observations",[]{
+            auto p=defaultProfile();p.modules.at("timer").enabled=true;GameSnapshot g;g.present=g.identityVerified=g.x64=g.foreground=true;g.build=std::string(kInputResearchBuild);
+            RuntimeStatus r;auto& e=r.engine.modules[moduleIndex("timer")];require(computeHealth(definition("timer"),p.modules.at("timer"),g,r).state==ModuleState::Unsupported);
+            r.engine.bound=e.bound=true;require(computeHealth(definition("timer"),p.modules.at("timer"),g,r).state==ModuleState::Bound);
+            r.armed=r.engine.permitted=e.conditions=e.applied=true;require(computeHealth(definition("timer"),p.modules.at("timer"),g,r).state==ModuleState::Requested);
+            e.observations=1;require(computeHealth(definition("timer"),p.modules.at("timer"),g,r).state==ModuleState::Observed);
+            g.build="other";require(computeHealth(definition("timer"),p.modules.at("timer"),g,r).state==ModuleState::Unsupported);
+        });
+        s.test("Every live setting reaches the typed bridge configuration",[]{
+            auto p=defaultProfile();p.modules.at("aim").enabled=true;p.modules.at("aim").number("height",.75);p.modules.at("velocity").number("vertical",63.12);p.modules.at("timer").number("multiplier",.8);
+            auto c=bridgeConfiguration(p);require((c.enabled&moduleBit(EngineModule::Aim))!=0);expectNear(c.aimHeight,.75);expectNear(c.velocityVertical,.6312,.00001);expectNear(c.timerMultiplier,.8,.00001);require(c.armed==0);
+        });
         s.test("Yaw wrap, vertical alignment and frame-independent angular speed",[]{
             expectNear(wrappedDegrees(359),-1);expectNear(lookAt({0,0,0},{0,0,5}).yaw,0);expectNear(lookAt({0,0,0},{0,5,0}).pitch,-90);
             auto a=Orientation{170,0};auto b2=a;for(int i=0;i<30;++i)a=smoothOrientation(a,{-170,30},60,1./30);
@@ -130,6 +167,13 @@ int main(int argc,char** argv){
             require(std::abs(counts[0]-130)<=2);require(std::abs(counts[1]-300)<=4);input.mouse={};
             for(int i=0;i<100;++i)require(planner.tick(10+i*.01,p,input,ready()).empty());
         });
+        s.test("Low polling rates preserve average CPS without catch-up bursts",[]{
+            auto p=defaultProfile();auto& click=p.modules.at("clicker");click.enabled=true;click.number("leftCps",30);PhysicalInput input;InputPlanner planner;
+            planner.tick(0,p,input,ready());input.mouse[0]=true;input.pressSequence[0]=1;int count=0;
+            for(int i=1;i<=500;++i){auto events=planner.tick(i*.02,p,input,ready());auto clicks=std::count_if(events.begin(),events.end(),[](auto e){return e.kind==OutputKind::Click;});require(clicks<=1);count+=static_cast<int>(clicks);}
+            require(count>=298&&count<=300,"50 Hz polling lost the requested 30 CPS average");
+            require(planner.tick(100,p,input,ready()).size()<=1);require(planner.tick(100.001,p,input,ready()).empty());
+        });
         s.test("Focus loss disarms held buttons until a new physical press",[]{
             auto p=defaultProfile();p.modules.at("clicker").enabled=true;PhysicalInput input;InputPlanner planner;planner.tick(0,p,input,ready());input.mouse[0]=true;input.pressSequence[0]=1;
             planner.tick(.01,p,input,ready());require(!planner.tick(.2,p,input,ready()).empty());auto gate=ready();gate.foreground=false;
@@ -141,6 +185,44 @@ int main(int argc,char** argv){
             input.mouse[1]=true;input.pressSequence[1]=1;planner.tick(.001,p,input,ready());require(planner.tick(.2,p,input,ready()).empty());
             input.mouse[0]=true;input.pressSequence[0]=2;planner.tick(.21,p,input,ready());auto events=planner.tick(.3,p,input,ready());
             require(std::any_of(events.begin(),events.end(),[](auto e){return e.kind==OutputKind::Click&&e.code==1;}));
+        });
+        s.test("Native target gating controls Triggerbot without leaking into menus",[]{
+            auto p=defaultProfile();p.modules.at("clicker").enabled=true;p.modules.at("clicker").flag("triggerbot",true);InputPlanner planner;PhysicalInput input;InputContext context;
+            require(planner.tick(0,p,input,ready(),context).empty());context.entityTarget=true;
+            require(!planner.tick(.1,p,input,ready(),context).empty());context.worldReady=false;require(planner.tick(.3,p,input,ready(),context).empty());
+        });
+        s.test("Auto and Legit mining preserve and release a single owned mouse hold",[]{
+            for(bool legit:{false,true}){auto p=defaultProfile();auto& click=p.modules.at("clicker");click.enabled=true;click.flag(legit?"breakLegit":"breakAuto",true);PhysicalInput input;InputPlanner planner;InputContext context;
+                planner.tick(0,p,input,ready(),context);input.mouse[0]=true;input.pressSequence[0]=1;context.blockTarget=true;context.blockToken=123;
+                auto first=planner.tick(.01,p,input,ready(),context);require(std::any_of(first.begin(),first.end(),[](auto e){return e.kind==OutputKind::MouseDown;})==!legit);
+                auto later=planner.tick(.3,p,input,ready(),context);if(legit)require(std::any_of(later.begin(),later.end(),[](auto e){return e.kind==OutputKind::MouseDown;}));
+                auto release=planner.stop(input);require(std::any_of(release.begin(),release.end(),[](auto e){return e.kind==OutputKind::MouseUp;}));require(planner.stop(input).empty());
+            }
+        });
+        s.test("Inverted mining follows the logical attack stream",[]{
+            auto p=defaultProfile();auto& click=p.modules.at("clicker");click.enabled=true;click.flag("invert",true);click.flag("breakAuto",true);PhysicalInput input;InputPlanner planner;InputContext context;context.blockTarget=true;
+            planner.tick(0,p,input,ready(),context);input.mouse[1]=true;input.pressSequence[1]=1;auto events=planner.tick(.01,p,input,ready(),context);
+            require(std::any_of(events.begin(),events.end(),[](auto e){return e.kind==OutputKind::MouseDown&&e.code==0;}));
+            require(std::none_of(events.begin(),events.end(),[](auto e){return e.kind==OutputKind::MouseDown&&e.code==1;}));
+        });
+        s.test("S-Tap uses an observed attack and restores forward after 60 ms",[]{
+            auto p=defaultProfile();p.modules.at("stap").enabled=true;InputPlanner planner;PhysicalInput input;input.keys['W']=true;InputContext context;
+            require(planner.tick(0,p,input,ready(),context).empty());context.attackSequence=1;auto e=planner.tick(.01,p,input,ready(),context);
+            require(std::any_of(e.begin(),e.end(),[](auto v){return v.kind==OutputKind::KeyUp&&v.code=='W';}));require(std::any_of(e.begin(),e.end(),[](auto v){return v.kind==OutputKind::KeyDown&&v.code=='S';}));
+            e=planner.tick(.071,p,input,ready(),context);require(std::any_of(e.begin(),e.end(),[](auto v){return v.kind==OutputKind::KeyUp&&v.code=='S';}));require(std::any_of(e.begin(),e.end(),[](auto v){return v.kind==OutputKind::KeyDown&&v.code=='W';}));
+            require(planner.tick(.1,p,input,ready(),context).empty());
+        });
+        s.test("S-Tap cancellation restores held forward only for an explicit in-world stop",[]{
+            for(int mode=0;mode<3;++mode){
+                auto p=defaultProfile();p.modules.at("stap").enabled=true;InputPlanner planner;PhysicalInput input;input.keys['W']=true;InputContext context;
+                planner.tick(0,p,input,ready(),context);context.attackSequence=1;planner.tick(.01,p,input,ready(),context);
+                if(mode==2)input.keys['W']=false;
+                auto gate=ready();gate.armed=false;context.restorePhysical=mode!=0;
+                auto events=planner.tick(.02,p,input,gate,context);
+                require(std::any_of(events.begin(),events.end(),[](auto e){return e.kind==OutputKind::KeyUp&&e.code=='S';}));
+                require(std::any_of(events.begin(),events.end(),[](auto e){return e.kind==OutputKind::KeyDown&&e.code=='W';})==(mode==1));
+                require(planner.tick(.03,p,input,gate,context).empty());
+            }
         });
         s.test("Randomized intervals vary within bounds with a declared average",[]{
             auto p=defaultProfile();auto& m=p.modules.at("clicker");m.enabled=true;m.flag("randomize",true);PhysicalInput input;InputPlanner planner(123);planner.tick(0,p,input,ready());
@@ -168,11 +250,12 @@ int main(int argc,char** argv){
             if(game.identityVerified){require(game.present&&game.x64);require(game.packageFamily=="Microsoft.MinecraftUWP_8wekyb3d8bbwe");require(!game.build.empty());}
             require(!verifiedInputBuild("future-build"));
         });
-        s.test("Native fixture receives clicks/keys while injected events cannot prime physical input",[]{
+        if(argc>1&&std::string(argv[1])=="--input-fixture")s.test("Native fixture receives clicks/keys while injected events cannot prime physical input",[]{
             WNDCLASSW wc{};wc.hInstance=GetModuleHandleW(nullptr);wc.lpfnWndProc=fixtureProc;wc.lpszClassName=L"AsterInputTestFixture";RegisterClassW(&wc);
             FixtureCount count;HWND window=CreateWindowW(wc.lpszClassName,L"Aster input test fixture",WS_OVERLAPPEDWINDOW,120,120,320,240,nullptr,nullptr,wc.hInstance,nullptr);
             require(window!=nullptr);SetWindowLongPtrW(window,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(&count));
-            ShowWindow(window,SW_SHOWNORMAL);SetForegroundWindow(window);pump(60);
+            ShowWindow(window,SW_SHOWNORMAL);SetForegroundWindow(window);
+            auto until=GetTickCount64()+60000;while(!windowBelongsTo(GetForegroundWindow(),GetCurrentProcessId())&&GetTickCount64()<until)pump(50);pump(60);
             require(windowBelongsTo(GetForegroundWindow(),GetCurrentProcessId()),"Fixture could not acquire foreground; no test input sent");
             InputObserver observer;require(observer.healthy());POINT client{80,80};ClientToScreen(window,&client);SetCursorPos(client.x,client.y);pump(10);
             require(InputService::sendEvent({OutputKind::Click,0,"test"}));require(InputService::sendEvent({OutputKind::Click,1,"test"}));

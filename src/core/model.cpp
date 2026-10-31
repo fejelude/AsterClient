@@ -21,60 +21,60 @@ Values defaults(const ModuleDefinition& def) {
 }
 const std::vector<ModuleDefinition>& moduleDefinitions() {
     static const std::vector<ModuleDefinition> defs{
-        {"reach","Reach","Combat",Capability::Engine,"Interaction distance; requires a tested game-engine adapter.",{
-            n("distance","Reach",5.2,3.,10.,.01,"%.2f m","Independent configuration bounds: 3-10 m. Nitro's actual bounds are unverified."),
+        {"reach","Reach","Combat",Capability::Engine,"Eye-to-target entity ray distance. Native dispatch and observed hits are reported separately.",{
+            n("distance","Reach",5.2,3.,10.,.01,"%.2f m","Maximum eye-to-target-box ray intersection distance; entity combat only, not block reach."),
             b("combatMode","Combat Mode",true,"Only activate reach while clicking."),
             b("onlyMoving","Only Moving",false,"Require player motion from verified game telemetry.")}},
-        {"clicker","Clicker","Combat",Capability::ClickInput,"Independent hold-to-repeat mouse streams. Game acceptance is unverified.",{
+        {"clicker","Clicker","Combat",Capability::ClickInput,"Independent real-time mouse streams, guarded by the native world/screen adapter.",{
             n("leftCps","Left",13,1,40,1,"%.0f CPS","Hold the physical left button to repeat. Range: 1-40 clicks per second."),
             n("rightCps","Right",30,1,40,1,"%.0f CPS","The right stream has its own clock; holding both keeps them independent."),
-            n("tuner","Tuner",651,0,1000,1,"%.0f","Unsupported: the reference does not define this algorithm or its units.",false),
+            n("tuner","Tuner",651,0,1000,1,"%.0f Hz","Scheduler polling frequency: 0 = automatic, nonzero values use 50-1000 Hz. Uses a temporary process-owned timer request while armed; CPS is unchanged."),
             b("leftPriming","Left Priming",false,"Hold left and tap right to prime the left stream. Independent mirrored policy; not verified Nitro parity."),
             b("rightPriming","Right Priming",false,"Hold right-click and tap left-click to activate right-clicker."),
             b("randomize","Randomize",false,"Uniform interval jitter of +/-12%; expected interval remains 1/CPS."),
-            b("triggerbot","Triggerbot",false,"Unsupported: no verified crosshair target telemetry.",false),
-            b("breakAuto","Break Blocks (Auto)",false,"Unsupported: requires verified block targeting and reference semantics.",false),
-            b("breakLegit","Break Blocks (Legit)",false,"Unsupported: the Auto/Legit distinction has not been established.",false),
+            b("triggerbot","Triggerbot",false,"Allow left clicks without a held left button while the native ray intersects an eligible, unobstructed entity."),
+            b("breakAuto","Break Blocks (Auto)",false,"Preserve a held mining action immediately when a block is targeted; normal Bedrock breaking speed."),
+            b("breakLegit","Break Blocks (Legit)",false,"Preserve mining after 250 ms of logical attack hold on the same block (right when inverted). Auto takes precedence if both are selected."),
             b("invert","Invert Clicks",false,"Swap logical output buttons while preserving independent physical input streams.")}},
-        {"aim","Aim Assist","Combat",Capability::Engine,"Separate Closet and Blatant profiles; no target data is obtained from the game.",{
-            n("smoothness","Smoothness",25,0,100,1,"%.0f%%","Saved profile value. The reference smoothing equation is unknown."),
-            n("fovHorizontal","FOV / first value",.4,0,180,.01,"%.2f","The screenshot units are unverified; this is configuration only."),
-            n("fovVertical","FOV / second value",.02,0,180,.01,"%.2f","The second FOV value has no established runtime interpretation."),
+        {"aim","Aim Assist","Combat",Capability::Engine,"Bounded camera steering with independent Closet and Blatant profiles.",{
+            n("smoothness","Smoothness",25,0,100,1,"%.0f%%","Higher values slow the exponential response and angular-rate limit. Uses real time."),
+            n("fovHorizontal","FOV / outer cone",.4,0,3.141593,.01,"%.2f rad","Outer acquisition half-angle in radians; 0.40 rad is about 22.92 degrees."),
+            n("fovVertical","FOV / dead zone",.02,0,3.141593,.01,"%.2f rad","Inner steering dead zone in radians; 0.02 rad is about 1.15 degrees."),
             n("distance","Distance",5,1,100,.1,"%.2f m","Maximum candidate target distance."),
-            n("height","Height",-.3,-2,2,.01,"%.2f","Vertical target offset; units require game validation."),
+            n("height","Height",-.3,-2,2,.01,"%.2f m","Vertical offset from the target collision-box center, in blocks."),
             b("vertical","Vertical",false,"Allow pitch adjustment when a compatible adapter exists."),
             b("horizontal","Horizontal",true,"Allow yaw adjustment when a compatible adapter exists."),
-            b("antibot","Antibot",false,"Classifier not implemented; no performance claim is made."),
+            b("antibot","Antibot",false,"Restrict candidates to structurally valid player entities. This is not a guarantee of identifying every server NPC."),
             b("onlyMoving","Only Moving",false,"Require player motion."),
             b("avoidWalls","Avoid Walls",true,"Require verified line of sight."),
-            b("avoidOnTarget","Avoid On Target",false,"Unverified reference policy; saved as configuration."),
+            b("avoidOnTarget","Avoid On Target",false,"Suspend correction while the view ray already intersects the target's unexpanded box."),
             b("cacheTargets","Cache Targets",true,"Cache invalidation requires world/entity identity."),
             b("combatMode","Combat Mode",false,"Only activate while clicking.")}},
-        {"hitbox","Hitbox","Combat",Capability::Engine,"Hitbox width and deterministic filtering require verified entity layouts.",{
-            n("width","Width",2.22,.1,5,.01,"%.2f","Width units and supported entities remain unverified."),
-            b("deterministic","Deterministic",true,"Intended to use Aim Assist target settings; dependency is unverified.")}},
+        {"hitbox","Hitbox","Combat",Capability::Engine,"Virtual horizontal targeting width; physical world collision geometry is preserved.",{
+            n("width","Width",2.22,.1,5,.01,"%.2f m","Absolute full targeting width in blocks. Target height is retained; combined with Reach in a single ray query."),
+            b("deterministic","Deterministic",true,"ON: nearest ray intersection, then entity ID. OFF: retain the previous target while it remains eligible.")}},
         {"velocity","Velocity","Movement",Capability::Engine,"Independent horizontal and vertical configuration. Curve is a preview, not sampled game motion.",{
             n("horizontal","Linear / X-Z",92.55,0,100,.01,"%.2f%%","Horizontal knockback multiplier; 100% is unchanged."),
             n("vertical","Height / Y",92.55,0,100,.01,"%.2f%%","Vertical knockback multiplier; 100% is unchanged."),
-            b("percentage","Percentage",true,"Show normalized axis factors in the preview."),
+            b("percentage","Percentage",true,"ON displays percentages; OFF displays normalized 0-1 axis factors. Stored values remain percentages."),
             b("precision","Precision",true,"Use hundredth-percent slider steps; otherwise whole-percent steps."),
             b("combatMode","Combat Mode",true,"Only activate velocity while clicking."),
-            b("combineModifiers","Combine Modifiers",false,"Reference modifier composition is undocumented."),
-            b("noBackwards","No Backwards",false,"Reference backward-motion policy is undocumented.")}},
-        {"timer","Timer","Movement",Capability::Engine,"Accurate requested-TPS calculations; no changes to Minecraft ticking.",{
-            n("multiplier","Timer",1.06,1,5,.01,"%.2fx","Requested TPS = 20 x multiplier. This readout does not measure game TPS."),
+            b("combineModifiers","Combine Modifiers",false,"ON scales total incoming velocity. OFF scales its change from the local velocity immediately before receipt."),
+            b("noBackwards","No Backwards",false,"Remove the modified horizontal impulse component opposite the player's facing direction.")}},
+        {"timer","Timer","Movement",Capability::Engine,"Scales the local simulation clock; requested and measured local TPS are separate.",{
+            n("multiplier","Timer",1.06,.1,5,.01,"%.2fx","Requested local TPS = 20 x multiplier. Remote server TPS is not controlled."),
             b("combatMode","Combat Mode",true,"Only activate timer while clicking.")}},
-        {"zoom","Zoom","Visual",Capability::Engine,"Field-of-view transition requires a tested camera adapter.",{
-            n("speedPercent","Zoom Speed",0,0,100,1,"%.0f%%","Controls transition speed; target factor and activation remain unverified."),
-            b("lowCpuMode","Low CPU Mode",true,"Reference optimization is unverified; no runtime claim.")}},
-        {"auto360","Auto 360","Visual",Capability::Engine,"Rotation units are undocumented. No mouse motion is emitted by this module.",{
-            n("speed","Speed",2,.1,10,.01,"%.2f","Controls the speed of Auto 360; units require measurement."),
-            n("leftPercent","Left",50,0,100,1,"%.0f%%","Independent reference parameter; normalization is not assumed."),
-            n("rightPercent","Right",50,0,100,1,"%.0f%%","Independent reference parameter; normalization is not assumed."),
-            n("step","Step",.0001,.000001,.1,.000001,"%.6f","Reference angular step and timing relation are unknown."),
-            n("interval","Interval",0,0,10000,1,"%.0f","Allows spins to alternate over intervals; units are unknown.")}},
+        {"zoom","Zoom","Visual",Capability::Engine,"Transition to 35% of the original camera field of view, restoring it on disable or stop.",{
+            n("speedPercent","Zoom Speed",0,0,100,1,"%.0f%%","0 changes instantly; 1-100 changes over 644-50 ms. The zoom target is 35% of baseline field of view."),
+            b("lowCpuMode","Low CPU Mode",true,"Use 100 Hz host polling when Zoom is enabled without Clicker or movement automation.")}},
+        {"auto360","Auto 360","Visual",Capability::Engine,"A complete yaw turn after a valid combat attack; Aim resumes when the turn finishes.",{
+            n("speed","Speed",2,.1,10,.01,"%.2f turns/s","Full rotations per real-time second."),
+            n("leftPercent","Left",50,0,100,1,"%.0f%%","Relative probability weight for a left turn; both direction weights at zero pause spins."),
+            n("rightPercent","Right",50,0,100,1,"%.0f%%","Relative probability weight for a right turn."),
+            n("step","Step",.0001,.000001,.1,.000001,"%.6f turns","Minimum accumulated angular update in turns; residual angle completes exactly one full turn."),
+            n("interval","Interval",0,0,10000,1,"%.0f ms","Minimum real-time delay between complete spins.")}},
         {"sprint","Sprint","Movement",Capability::SprintInput,"Hold the configured sprint key while moving forward; matches your Minecraft key map.",{}},
-        {"stap","Auto S-Tap","Movement",Capability::Engine,"Unsupported: only a name/hotkey is documented; no trigger schedule is established.",{}},
+        {"stap","Auto S-Tap","Movement",Capability::Engine,"After an observed attack while moving forward, tap backward for 60 ms, then restore held movement.",{}},
         {"walk","Auto Walk","Movement",Capability::WalkInput,"Sustain the configured forward key only while the input session is armed and Minecraft is focused.",{}}
     };
     return defs;
@@ -98,7 +98,7 @@ Profile defaultProfile(){
         if(d.id=="aim"){
             m.profiles.clear(); m.profiles["closet"]=defaults(d); m.profiles["blatant"]=defaults(d);
             m.profiles["blatant"]["smoothness"]=5.; m.profiles["blatant"]["distance"]=100.;
-            m.profiles["blatant"]["fovHorizontal"]=4.; m.profiles["blatant"]["fovVertical"]=0.;
+            m.profiles["blatant"]["fovHorizontal"]=3.14; m.profiles["blatant"]["fovVertical"]=0.;
             m.selectedProfile="closet";
         }
         p.modules.emplace(d.id,std::move(m)); p.bindings[d.id]={};
@@ -176,27 +176,34 @@ std::vector<std::string> validate(Profile& p){
 }
 ModuleHealth computeHealth(const ModuleDefinition& d,const ModuleConfig& m,const GameSnapshot& g,const RuntimeStatus& r){
     ModuleHealth h;h.enabledByUser=m.enabled;
-    h.support=d.capability==Capability::Engine?SupportState::Unsupported:SupportState::Partial;
+    const auto index=moduleIndex(d.id);const auto& evidence=r.engine.modules.at(index);
+    h.support=evidence.bound?SupportState::Supported:SupportState::Unsupported;
     if(!m.enabled){h.state=ModuleState::Disabled;h.detail="Disabled by you";return h;}
-    if(d.capability==Capability::Engine){h.state=ModuleState::Unsupported;h.code="NO_VERIFIED_ENGINE_ADAPTER";
-        h.detail="No verified engine adapter"+(g.build.empty()?std::string{}:" for "+g.build)+". Configuration is saved; no game changes are made.";return h;}
     if(!g.present){h.state=ModuleState::EnabledOffline;h.code="GAME_NOT_RUNNING";h.detail="Waiting for Minecraft";return h;}
     if(!g.identityVerified||!g.x64){h.state=ModuleState::Unsupported;h.code="GAME_IDENTITY_UNVERIFIED";h.detail=g.detail;return h;}
     if(g.build!=kInputResearchBuild){h.state=ModuleState::Unsupported;h.code="UNSUPPORTED_BUILD";h.detail="Input is disabled for this untested build. Configuration is preserved.";return h;}
+    if(!evidence.bound){h.state=ModuleState::Unsupported;h.code="ADAPTER_NOT_BOUND";h.detail=r.engine.detail;return h;}
     if(!r.licensed){h.state=ModuleState::EnabledOffline;h.code="LICENSE_UNAVAILABLE";h.detail="Your configured license service has not granted an entitlement.";return h;}
     if(!r.inputHealthy){h.state=ModuleState::Failed;h.code="INPUT_SEND_FAILED";h.detail="Windows rejected input. Press F9, review diagnostics, then re-arm.";return h;}
-    if(!g.foreground||!r.armed){h.state=ModuleState::EnabledOffline;h.code="INPUT_PAUSED";h.detail=r.stopReason;return h;}
+    if(!g.foreground||!r.armed||!r.engine.permitted){h.state=ModuleState::Bound;h.code="ADAPTER_BOUND";h.detail=r.armed?r.engine.detail:r.stopReason;return h;}
+    if(evidence.applied){h.state=evidence.observations?ModuleState::Observed:ModuleState::Requested;h.code="HANDLER_APPLIED";h.detail=evidence.reason;return h;}
+    if(d.capability==Capability::Engine){
+        if(!evidence.conditions){h.state=ModuleState::EnabledOffline;h.code="CONDITIONS_NOT_MET";h.detail=evidence.reason;return h;}
+        h.state=evidence.applied?(evidence.observations?ModuleState::Observed:ModuleState::Requested):ModuleState::Bound;
+        h.code=evidence.applied?"HANDLER_APPLIED":"HANDLER_READY";h.detail=evidence.reason;return h;
+    }
     h.state=ModuleState::InputRunningUnverified;h.code="GAME_EFFECT_UNVERIFIED";
-    h.detail="Input scheduler armed. Windows send counts are separate from Minecraft acknowledgments (not available).";return h;
+    h.detail="World/screen-gated input scheduler armed. Windows sends and native game events are counted separately.";return h;
 }
 std::string_view stateName(ModuleState s){
     switch(s){case ModuleState::Disabled:return "OFF";case ModuleState::EnabledOffline:return "WAITING";
     case ModuleState::Initializing:return "INITIALIZING";case ModuleState::InputRunningUnverified:return "INPUT / UNVERIFIED";
     case ModuleState::Active:return "ACTIVE";case ModuleState::Unsupported:return "UNSUPPORTED";case ModuleState::Failed:return "FAILED";}
+    if(s==ModuleState::Bound)return "BOUND";if(s==ModuleState::Requested)return "APPLIED";if(s==ModuleState::Observed)return "OBSERVED";
     return "UNKNOWN";
 }
-double timerTps(double x){return 20.*std::clamp(x,1.,5.);}
-double timerBoost(double x){return (std::clamp(x,1.,5.)-1.)*100.;}
+double timerTps(double x){return 20.*std::clamp(x,.1,5.);}
+double timerBoost(double x){return (std::clamp(x,.1,5.)-1.)*100.;}
 double wrappedDegrees(double d){return std::remainder(d,360.);}
 Orientation lookAt(Vec3 s,Vec3 t){
     const double x=t.x-s.x,y=t.y-s.y,z=t.z-s.z;

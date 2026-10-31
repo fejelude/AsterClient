@@ -65,7 +65,7 @@ constexpr UINT TrayMessage=WM_APP+42;
 void restore(HWND window){ShowWindow(window,SW_SHOW);ShowWindow(window,SW_RESTORE);SetForegroundWindow(window);windowContext.hidden=false;}
 LRESULT CALLBACK windowProc(HWND window,UINT msg,WPARAM wp,LPARAM lp){
     if(msg==WM_HOTKEY){
-        if(wp==Hotkeys::PanicId&&windowContext.input)windowContext.input->stop("Emergency F9 stop.");
+        if(wp==Hotkeys::PanicId&&windowContext.input)windowContext.input->stop("Emergency F9 stop.",true);
         if(wp==Hotkeys::HideId){if(IsWindowVisible(window)){ShowWindow(window,SW_HIDE);windowContext.hidden=true;}else restore(window);}return 0;
     }
     if(msg==TrayMessage){
@@ -181,9 +181,9 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,LPWSTR,int){
                 auto game=detector.snapshot();bool ownForeground=GetForegroundWindow()==window;
                 for(const auto& press:observer.drainPresses()){
                     if(ownForeground&&ui.capturingKey()){ui.acceptKey(press);continue;}
-                    if(press.key==VK_F9){input.stop("Emergency F9 stop.");continue;}
+                    if(press.key==VK_F9){input.stop("Emergency F9 stop.",true);continue;}
                     if(!game.foreground)continue;
-                    if(press.key==VK_F8){if(input.status().armed)input.stop("Input session disarmed with F8.");else input.arm();continue;}
+                    if(press.key==VK_F8){if(input.status().armed)input.stop("Input session disarmed with F8.",true);else input.arm();continue;}
                     if(isModifierKey(press.key))continue;
                     std::vector<std::string> matches;
                     for(const auto& [id,key]:profile.bindings)if(id!="hide"&&bindingMatches(key,press.key,press.modifiers))matches.push_back(id);

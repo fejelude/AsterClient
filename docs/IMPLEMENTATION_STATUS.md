@@ -1,30 +1,11 @@
 # Implementation status
 
-This is an original implementation guided by the 27-page specification supplied on October 30, 2026. The reference screenshots and Nitro proprietary artwork are not distributed as application assets.
+This original application follows the supplied 27-page clean-room specification and 23-page ASTER feature guide. Reference screenshots and proprietary artwork are not distributed as application assets.
 
-## Verified development environment
+The main application now owns the exact-build native adapter. Typed configuration reaches real Reach, Hitbox, Aim, Velocity, Timer, Clicker/mining, Zoom and Auto 360 handlers. Host input planning implements independent CPS, priming, jitter, inversion, Triggerbot, Walk, Sprint and S-Tap. Saved state cannot arm itself: F8 starts a focused-world session; interruption requires a new explicit arm.
 
-- Windows x64; Visual Studio 2022 Community 17.14, MSVC 14.44, Windows SDK 10.0.22621.
-- Installed and running Minecraft Bedrock package: `Microsoft.MinecraftUWP`, x64, build `1.26.6005.0`.
-- Dear ImGui 1.91.9b and nlohmann/json 3.12.0 pinned by commit and downloaded-file SHA-256.
-- Portable CMake is local to this project. No administrator rights or system installation is required.
+The host/bridge protocol validates version, session, heartbeat and pinned world generation. Effects stop on focus/capture/world loss, F9, shutdown or invalid layout. Timer/FOV writes carry ownership and restore their baseline. Native callbacks borrow POD data; foreign strings and ownership-bearing game objects are never constructed or destroyed by the adapter.
 
-## Engineering boundary
+The original UI, appearance, optional hotkeys, atomic profiles, recovery, diagnostics, Credential Manager, independent licensing service and signed-update verification remain implemented. Commercial service hosting, purchase destinations and trusted code signing require owner-provided infrastructure. The developer build works locally without a purchase key.
 
-The PDF explicitly does not supply verified engine integration for Reach, Aim Assist, Hitbox, Velocity, Timer, Zoom, or Auto 360. Its modern reference SDK targets 26.52, not the installed build. No engine offsets from an unverified build will be executed. A setting marked unsupported is a saved configuration request, never a claim that the game changed.
-
-Native input acceptance tests are distinct from game effect verification. Windows accepting a SendInput request is not an acknowledgment from Minecraft. Candidate input features will remain unverified for gameplay until controlled in-world tests pass.
-
-## Work streams
-
-1. Reproducible native shell: Win32, Direct3D 11, Dear ImGui.
-2. Typed profiles, migrations, atomic persistence, per-module lifecycle and honest health.
-3. Game identity/version/foreground detection and focus-safe physical input observation.
-4. Independent click scheduling, configurable movement keys and explicit capability gates.
-5. Original animated appearance and all observed control groups with clear unknown semantics.
-6. Independent license service and Windows Credential Manager persistence.
-7. Automated core/platform tests, native UI checks, portable release, hashes and documentation.
-
-## Release gates
-
-G5 (every game module verified in-world) and trusted commercial code signing require evidence or resources beyond the supplied PDF. They must not be reported as passed on the strength of a GUI or unit tests.
+See [runtime contract](RUNTIME_CONTRACT.md), [compatibility](COMPATIBILITY.md), and [validation](VALIDATION.md). Real effects were measured through both the developer probe and the main application. Validation lists the exercised scenarios and the remaining manual coverage, including the complete physical W/button S-Tap path. Exact proprietary algorithms, universal multiplayer authority and future binaries are not established.

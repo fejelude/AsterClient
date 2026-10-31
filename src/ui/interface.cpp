@@ -121,8 +121,10 @@ bool Interface::setting(const SettingDefinition& def,ModuleConfig& module){
     if(!def.implemented)ImGui::BeginDisabled();
     if(def.kind==SettingKind::Boolean){bool flag=module.flag(def.id);changedValue=check(def.label.c_str(),flag,def.help.c_str());if(changedValue)module.flag(def.id,flag);}
     else{
-        double value=module.number(def.id),step=def.step;
+        double value=module.number(def.id),step=def.step,minimum=def.minimum,maximum=def.maximum;std::string format=def.format;
         if((def.id=="horizontal"||def.id=="vertical")&&module.values().contains("precision")&&!module.flag("precision"))step=1;
+        const bool factor=(def.id=="horizontal"||def.id=="vertical")&&module.values().contains("percentage")&&!module.flag("percentage");
+        if(factor){value/=100.;step/=100.;minimum/=100.;maximum/=100.;format="%.4f x";}
         float available=ImGui::GetContentRegionAvail().x;
         float labelWidth=std::min(160*scale_,available*.32f);
         float buttonsWidth=50*scale_;float sliderWidth=std::max(80*scale_,available-labelWidth-buttonsWidth-16*scale_);
@@ -132,15 +134,15 @@ bool Interface::setting(const SettingDefinition& def,ModuleConfig& module){
         if(!editing){ImGui::PushStyleColor(ImGuiCol_FrameBg,{0,0,0,0});ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,{0,0,0,0});
             ImGui::PushStyleColor(ImGuiCol_FrameBgActive,{0,0,0,0});ImGui::PushStyleColor(ImGuiCol_SliderGrab,{0,0,0,0});
             ImGui::PushStyleColor(ImGuiCol_SliderGrabActive,{0,0,0,0});ImGui::PushStyleColor(ImGuiCol_Text,{0,0,0,0});}
-        changedValue=ImGui::SliderScalar("##value",ImGuiDataType_Double,&value,&def.minimum,&def.maximum,def.format.c_str(),ImGuiSliderFlags_AlwaysClamp);
+        changedValue=ImGui::SliderScalar("##value",ImGuiDataType_Double,&value,&minimum,&maximum,format.c_str(),ImGuiSliderFlags_AlwaysClamp);
         if(!editing)ImGui::PopStyleColor(6);
         if(!ImGui::TempInputIsActive(sliderId)){
             auto begin=ImGui::GetItemRectMin(),end=ImGui::GetItemRectMax();auto draw=ImGui::GetWindowDrawList();
-            float fraction=static_cast<float>((value-def.minimum)/(def.maximum-def.minimum));float alpha=def.implemented?1.f:.32f;
+            float fraction=static_cast<float>((value-minimum)/(maximum-minimum));float alpha=def.implemented?1.f:.32f;
             draw->AddRectFilled(begin,end,color(rgba(p_.ui.secondary,.97f)),p_.ui.rounding*scale_);
             float fill=std::clamp(fraction*(end.x-begin.x),7*scale_,end.x-begin.x);
             draw->AddRectFilled(begin,{begin.x+fill,end.y},color(accent_,alpha),p_.ui.rounding*scale_);
-            char label[80];snprintf(label,sizeof(label),def.format.c_str(),value);auto textSize=ImGui::CalcTextSize(label);
+            char label[80];snprintf(label,sizeof(label),format.c_str(),value);auto textSize=ImGui::CalcTextSize(label);
             auto ink=fraction>.58f?readableOn(accent_,rgba(p_.ui.activeText)):rgba(p_.ui.text);
             draw->AddText({begin.x+(end.x-begin.x-textSize.x)*.5f,begin.y+(end.y-begin.y-textSize.y)*.5f},color(ink,alpha),label);
             if(ImGui::IsItemFocused()||ImGui::IsItemHovered())draw->AddRect(begin,end,color(accent_,.7f*alpha),p_.ui.rounding*scale_,0,1.f);
@@ -149,13 +151,13 @@ bool Interface::setting(const SettingDefinition& def,ModuleConfig& module){
         if(ImGui::Button("-",{22*scale_,30*scale_})){value-=step;changedValue=true;}help("Decrease by one step.");ImGui::SameLine(0,3*scale_);
         if(ImGui::Button("+",{22*scale_,30*scale_})){value+=step;changedValue=true;}help("Increase by one step.");ImGui::SameLine();
         ImGui::AlignTextToFramePadding();ImGui::TextUnformatted(def.label.c_str());
-        if(changedValue){value=std::clamp(std::round((value-def.minimum)/step)*step+def.minimum,def.minimum,def.maximum);module.number(def.id,value);}
+        if(changedValue){value=std::clamp(std::round((value-minimum)/step)*step+minimum,minimum,maximum);module.number(def.id,factor?value*100.:value);}
     }
     if(!def.implemented){ImGui::EndDisabled();help(def.help.c_str());}
     ImGui::PopID();return changedValue;
 }
 void Interface::bindButton(std::string_view id){
-    auto key=keyName(p_.bindings.at(std::string(id)));auto text="BOUND: "+key;
+    auto key=keyName(p_.bindings.at(std::string(id)));auto text="HOTKEY: "+key;
     if(ImGui::Button(text.c_str())){captureId_=id;captureMovement_=-1;captureRequested_=true;captured_.reset();captureError_.clear();input_.stop("Key binding capture is open.");}
     help("Capture a new optional key binding. Escape cancels; Delete unbinds. Conflicting bindings are never toggled together.");
 }
@@ -163,11 +165,12 @@ void Interface::modulePanel(std::string_view id){
     const auto& def=definition(id);auto& module=p_.modules.at(std::string(id));auto game=detector_.snapshot();auto runtime=input_.status();
     auto health=computeHealth(def,module,game,runtime);
     heading(uppercase(def.name).c_str(),def.description.c_str());
-    if(def.capability==Capability::Engine){
+    const auto& evidence=runtime.engine.modules.at(moduleIndex(id));
+    if(!evidence.bound){
         ImGui::PushStyleColor(ImGuiCol_Text,{1.f,.64f,.32f,1});ImGui::TextWrapped("UNSUPPORTED  /  No verified game-engine adapter%s%s.",game.build.empty()?"":" for ",game.build.c_str());ImGui::PopStyleColor();
-        ImGui::TextDisabled("Settings below are saved configuration; they do not alter Minecraft.");
+        ImGui::TextWrapped("%s",runtime.engine.detail.c_str());
     }else{
-        ImGui::TextColored({1.f,.72f,.3f,1},"INPUT CAPABILITY  /  In-world effect unverified");
+        ImGui::TextColored(accent_,"NATIVE ADAPTER BOUND  /  %s",game.build.c_str());
         ImGui::TextWrapped("%s",health.detail.c_str());
     }
     ImGui::Dummy({0,8*scale_});
@@ -177,18 +180,18 @@ void Interface::modulePanel(std::string_view id){
     if(id=="aim"){
         bool closet=module.selectedProfile=="closet";
         if(ImGui::RadioButton("CLOSET",closet)){module.selectedProfile="closet";changed();}ImGui::SameLine();
-        if(ImGui::RadioButton("BLATANT",!closet)){module.selectedProfile="blatant";changed();}help("Each named profile stores independent values; runtime semantics remain unverified.");ImGui::Dummy({0,6*scale_});
+        if(ImGui::RadioButton("BLATANT",!closet)){module.selectedProfile="blatant";changed();}help("Independent saved profiles. Blatant uses a faster bounded angular correction; higher Smoothness slows both modes.");ImGui::Dummy({0,6*scale_});
     }
     if(id=="velocity"){
         float points[81];const double xz=module.number("horizontal")/100.,vertical=module.number("vertical")/100.;
         for(int i=0;i<81;++i){float t=i/80.f;points[i]=static_cast<float>(4*t*(1-t)*vertical);}
         ImGui::PushStyleColor(ImGuiCol_PlotLines,accent_);ImGui::PlotLines("##preview",points,81,0,"CONFIGURATION PREVIEW / not measured displacement",0,1,{ImGui::GetContentRegionAvail().x,90*scale_});ImGui::PopStyleColor();
-        if(module.flag("percentage"))ImGui::Text("X/Z factor %.4f  /  Y factor %.4f",xz,vertical);
-        else ImGui::Text("X/Z %.2f  /  Y %.2f",module.number("horizontal"),module.number("vertical"));
+        if(module.flag("percentage"))ImGui::Text("X/Z %.2f%%  /  Y %.2f%%",module.number("horizontal"),module.number("vertical"));
+        else ImGui::Text("X/Z factor %.4f  /  Y factor %.4f",xz,vertical);
     }
     if(id=="timer"){
         auto multiplier=module.number("multiplier");ImGui::TextColored(accent_,"REQUESTED TPS  %.2f   /   SPEED BOOST  %.2f%%",timerTps(multiplier),timerBoost(multiplier));
-        ImGui::TextDisabled("Calculated target; actual game tick rate is not measured.");ImGui::Dummy({0,8*scale_});
+        if(runtime.engine.worldReady)ImGui::Text("MEASURED LOCAL TPS  %.2f",runtime.engine.localTps);else ImGui::TextDisabled("Measured local TPS: N/A");ImGui::Dummy({0,8*scale_});
     }
     if(id=="reach"){
         auto distance=module.number("distance");ImGui::Text("%.1f%% of 3.00 m baseline   /   +%.2f block(s)",distance/3.*100.,distance-3.);ImGui::Dummy({0,6*scale_});
@@ -197,12 +200,16 @@ void Interface::modulePanel(std::string_view id){
     if(id=="clicker"){
         ImGui::Dummy({0,8*scale_});ImGui::Separator();
         ImGui::Text("Requests       L %llu   R %llu",runtime.requested[0],runtime.requested[1]);
+        ImGui::Text("Native queued  L %llu   R %llu",runtime.queued[0],runtime.queued[1]);
+        ImGui::Text("Native actions L %llu   R %llu",runtime.engine.clickActions[0],runtime.engine.clickActions[1]);
         ImGui::Text("Windows sent   L %llu   R %llu",runtime.sent[0],runtime.sent[1]);
-        ImGui::TextDisabled("Minecraft acknowledgments: unavailable");
+        if(runtime.engine.bound)ImGui::Text("Native attack events  %llu",runtime.engine.attackCalls);else ImGui::TextDisabled("Native attack events: N/A");
+        ImGui::TextDisabled("Attack callbacks are game input acceptance; damage is measured separately.");
         ImGui::TextWrapped("F8 arms input in a private world. F9 stops. Release and re-press a held mouse button after arming. Chat/menu keys and focus loss pause automation.");
     }
-    if(id=="auto360"){ImGui::TextDisabled("Measured rotations: unavailable (no orientation telemetry).");}
-    if(id=="zoom"){ImGui::TextDisabled("Game FOV modifier: unavailable (no camera adapter).");}
+    if(id=="auto360"){if(evidence.bound)ImGui::Text("Completed turns  %llu",evidence.observations);else ImGui::TextDisabled("Completed turns: N/A");}
+    if(def.capability==Capability::Engine&&evidence.bound)ImGui::Text("Handler requests  %llu   /   observations  %llu",evidence.requests,evidence.observations);
+    if(id=="zoom"){if(evidence.bound)ImGui::Text("Camera FOV  %.2f rad / target factor 0.35",evidence.observedValue);else ImGui::TextDisabled("Camera FOV: adapter not bound");}
 }
 void Interface::appearanceAccent(){
     heading("ACCENT","One accent ties the navigation, sliders and status outlines together.");
@@ -350,7 +357,7 @@ void Interface::hotkeyPanel(){
         for(const auto& id:ids){ImGui::PushID(id.c_str());ImGui::TableNextRow();ImGui::TableSetColumnIndex(0);
             if(id!="hide"){auto& module=p_.modules.at(id);if(check("##enabled",module.enabled))changed();}else ImGui::TextDisabled("GLOBAL");
             ImGui::TableSetColumnIndex(1);ImGui::TextUnformatted(id=="hide"?"Hide / Restore":definition(id).name.c_str());
-            if(id!="hide"&&definition(id).capability==Capability::Engine)help("No verified engine adapter. A requested state is saved, but the game is unchanged.");
+            if(id!="hide"&&definition(id).capability==Capability::Engine)help("The module's panel reports the live adapter, conditions, and observed effects separately from its saved enable state.");
             ImGui::TableSetColumnIndex(2);bindButton(id);ImGui::SameLine();
             if(ImGui::SmallButton("x")){if(id!="hide"||hotkeys_.configureHide({})){p_.bindings[id]={};changed();save();}}help("Unbind this key. GUI operation remains available.");ImGui::PopID();
         }ImGui::EndTable();
@@ -361,7 +368,7 @@ void Interface::hotkeyPanel(){
     for(int i=0;i<6;++i){ImGui::PushID(i);ImGui::Text("%-10s",names[i]);ImGui::SameLine(150*scale_);
         if(ImGui::Button(keyName({p_.movement[i],0}).c_str(),{130*scale_,0})){captureId_=names[i];captureMovement_=i;captureRequested_=true;captured_.reset();captureError_.clear();input_.stop("Movement key capture is open.");}ImGui::PopID();}
     if(ImGui::Button("Reset Movement Map")){p_.movement=defaultProfile().movement;changed();save();}
-    ImGui::TextWrapped("Sprint holds the configured sprint key while forward is held. Auto Walk holds Forward. Auto S-Tap remains unsupported because its timing is undocumented.");
+    ImGui::TextWrapped("Sprint holds the configured sprint key while moving forward. Auto Walk holds Forward. Auto S-Tap taps Back for 60 ms after an observed attack while physically holding Forward. Match these keys to Minecraft's controls.");
 }
 void Interface::applyProfile(Profile profile){
     validate(profile);input_.stop("Profile changed. Press F8 in-world to resume.");p_=std::move(profile);++profileGeneration_;
@@ -382,7 +389,7 @@ void Interface::plugs(){
         catch(...){message="Profile import failed; current configuration preserved.";}
     }
     auto game=detector_.snapshot();ImGui::Dummy({0,8*scale_});ImGui::Text("Minecraft  %s",game.build.empty()?"not detected":game.build.c_str());
-    ImGui::Text("Client     %s / Windows x64 / DirectX 11",kVersion);ImGui::TextDisabled("Engine adapters: none verified. Input bridge: experimental.");
+    ImGui::Text("Client     %s / Windows x64 / DirectX 11",kVersion);ImGui::TextDisabled("Exact-build native adapter; see the validation report for measured coverage.");
     ImGui::Separator();ImGui::Dummy({0,8*scale_});
     auto license=license_.snapshot();heading("OWN LICENSE SERVICE",license.detail.c_str());
     ImGui::TextColored(accent_,"%s",licenseStateName(license.state).data());
@@ -431,8 +438,10 @@ void Interface::diagnosticPanel(){
     heading("DIAGNOSTICS","No telemetry leaves this app automatically. Preview exactly what Copy Report shares to your clipboard.");
     ImGui::Text("Game identity  %s",game.identityVerified?"verified Store package":"not verified");
     ImGui::Text("Build          %s",game.build.empty()?"not available":game.build.c_str());
-    ImGui::Text("Foreground     %s",game.foreground?"yes":"no");ImGui::Text("Cursor captured %s",game.cursorCaptured?"yes":"no");
-    ImGui::Text("Input session  %s",runtime.armed?"armed / unverified in game":"paused");ImGui::TextWrapped("%s",runtime.stopReason.c_str());
+    ImGui::TextWrapped("Adapter        %s",runtime.engine.detail.c_str());ImGui::Text("Input capture  %s",runtime.engine.screen.empty()?"N/A":runtime.engine.screen.c_str());
+    ImGui::Text("Local TPS      %.2f",runtime.engine.localTps);ImGui::Text("Native attacks %llu",runtime.engine.attackCalls);
+    ImGui::Text("Foreground     %s",game.foreground?"yes":"no");ImGui::Text("Gameplay capture %s",gameplayCaptureReady(game,runtime.engine)?"yes":"no");ImGui::TextDisabled("Win32 cursor clip %s",game.cursorCaptured?"yes":"no");
+    ImGui::Text("Input session  %s",runtime.armed?"armed":"paused");ImGui::TextWrapped("%s",runtime.stopReason.c_str());
     ImGui::Text("Send failures  %llu",runtime.failures);ImGui::Text("Swapped mouse buttons  %s",GetSystemMetrics(SM_SWAPBUTTON)?"yes (logical streams)":"no");
     ImGui::Text("F9 emergency hotkey  %s",hotkeys_.panicRegistered()?"registered":"unavailable; local F9 and Stop remain available");
     if(ImGui::Button("STOP ALL INPUT")){input_.stop("Stopped from diagnostics.");message="Input stopped.";}
@@ -531,7 +540,7 @@ void Interface::render(float dpiScale){
             if(text.size()<message.size())text+="...";
             ImGui::TextColored(accent_,"%s",text.c_str());help(message.c_str());
         }else{
-            ImGui::TextColored(runtime.armed?ImVec4{1,.72f,.3f,1}:accent_,"%s",game.present?"GAME DETECTED / PARTIAL":"LOOKING FOR MINECRAFT");
+            ImGui::TextColored(runtime.armed?ImVec4{1,.72f,.3f,1}:accent_,"%s",runtime.engine.permitted?"WORLD ACTIVE":runtime.engine.bound?"ADAPTER BOUND":game.present?"GAME DETECTED":"LOOKING FOR MINECRAFT");
             ImGui::SameLine();ImGui::TextDisabled("  F8 arm  /  F9 stop");
         }
         ImGui::SetCursorPos({size.x-135*scale_,y-2*scale_});if(ImGui::SmallButton("STOP INPUT"))input_.stop("Stopped from the footer.");

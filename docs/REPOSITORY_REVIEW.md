@@ -45,11 +45,13 @@ Host: Linux x64, GCC 13.3, CMake 3.31.10, Node 24.22.1. No Windows desktop, MSVC
 | Windows executable, DLL, native tests and packaging | Not run locally. The repository workflow builds, runs CTest and required native service tests, packages, and smoke-tests the installed application on Windows. Check its actual result on the PR. |
 | Live Minecraft module effects, CPU/memory usage and game restart | Not measured in this review. Historical measurements in `VALIDATION.md` describe the earlier snapshot and do not validate this patch. |
 
+Windows CI subsequently verified the application changes in [run 41269929319](https://github.com/fejelude/AsterClient/actions/runs/41269929319): both jobs passed, the EXE/DLL built, both CTest targets passed, all 15 Node tests (including the parent and three native integration subtests) passed with zero skips, and packaging plus installed-app startup/profile saving passed. The Windows package and test summaries are attached to that run. The workflow actions were then updated to verified, commit-pinned Node 24 releases to remove the deprecated action-runtime warning; check the latest PR run for that workflow-only follow-up.
+
 ## Compatibility and remaining work
 
 The existing allowlist remains Store x64 build `1.26.6005.0`, SHA-256 `988f6a61403b4381aa41e6c66d64cce441b14e561a9b10f647c2758ef3f2672a`. There is no evidence here for a newer Bedrock version. No gameplay module was removed or renamed; no new game modification, bypass or concealment mechanism was added.
 
-The existing integration loads a bridge into Minecraft and uses native detours and exact-build memory layouts. This review does not establish authorization for any other process or environment. The existing bridge has incremental hook initialization, shared callback state and complex teardown paths that need native failure/concurrency testing. Changing those mechanisms without a game test environment would require a separate, measurable native-runtime change.
+The existing integration loads a bridge into Minecraft and uses native detours and exact-build memory layouts. The bridge has incremental hook initialization, shared callback state and complex teardown paths that need native failure/concurrency testing. Changing those mechanisms without a game test environment would require a separate, measurable native-runtime change.
 
 Other remaining limitations:
 

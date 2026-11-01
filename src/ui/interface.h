@@ -10,6 +10,7 @@ public:
     Interface(HWND,ID3D11Device*,Profile&,ConfigStore&,Diagnostics&,GameDetector&,InputService&,LicenseClient&,Hotkeys&);
     ~Interface();
     void render(float dpiScale);
+    void tick();
     void acceptKey(const KeyPress&);
     bool capturingKey()const{return !captureId_.empty();}
     void changed();
@@ -67,6 +68,6 @@ private:
     std::string reportPreview_;
     std::string lastMessage_;
     double messageChangedAt_=0;
-    std::uint64_t profileGeneration_=0;
+    std::uint64_t profileGeneration_=0,imageGeneration_=0;
 };
 } // namespace aster

@@ -24,4 +24,13 @@ struct EngineRuntime {
     std::string detail="Waiting for exact-build adapter",screen,sha256;
     std::array<ModuleEvidence,EngineModuleCount> modules{};
 };
+// The clock is supplied by the host, so a stalled transport cannot retain a ready state.
+inline void refreshEngineLiveness(EngineRuntime& runtime,std::uint64_t now,std::uint64_t heartbeat){
+    runtime.heartbeatAge=now>=heartbeat?now-heartbeat:UINT64_MAX;
+    if(!heartbeat||runtime.heartbeatAge>=500){
+        runtime.worldReady=runtime.permitted=runtime.blockTarget=runtime.entityTarget=false;
+        for(auto& module:runtime.modules){module.conditions=module.applied=false;}
+        runtime.detail="Adapter telemetry is stale; input is paused until fresh world data arrives";
+    }
+}
 }

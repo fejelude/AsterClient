@@ -1,5 +1,6 @@
 """Fetch pinned, permissively licensed build dependencies without installing software."""
 from pathlib import Path
+import argparse
 import hashlib
 import io
 import json
@@ -7,6 +8,7 @@ import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+PINNED = {entry['path']: entry for entry in json.loads((ROOT/'dependencies.lock.json').read_text())['files']}
 IMGUI = 'f5befd2d29e66809cd1110a152e375a7f1981f06'
 JSON = '55f93686c01528224f448c19128836e7df245f72'
 MINHOOK = 'c3fcafdc10146beb5919319d0683e44e3c30d537'
@@ -20,16 +22,27 @@ FILES = [
     'examples/example_win32_directx11/main.cpp',
 ]
 
+def verify(data, target, url=None):
+    path = str(target.relative_to(ROOT)).replace('\\', '/')
+    pinned = PINNED.get(path)
+    if not pinned or (url is not None and pinned['url'] != url):
+        raise ValueError('Dependency is not pinned: '+path)
+    digest = hashlib.sha256(data).hexdigest()
+    if digest != pinned['sha256']:
+        raise ValueError('Dependency hash changed: '+path)
+    return {'path': path, 'url': pinned['url'], 'sha256': digest}
+
 def fetch(url, target):
     if target.exists():
         data = target.read_bytes()
+        return verify(data, target, url)
     else:
         with urllib.request.urlopen(url, timeout=90) as response:
             data = response.read()
+        record = verify(data, target, url)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
-    return {'path': str(target.relative_to(ROOT)).replace('\\', '/'),
-            'url': url, 'sha256': hashlib.sha256(data).hexdigest()}
+        return record
 
 def main():
     records = []
@@ -58,11 +71,11 @@ def main():
             target=ROOT/'external'/'bedrock-sdk'/'entt'/relative
             if not target.resolve().is_relative_to((ROOT/'external'/'bedrock-sdk').resolve()):raise ValueError('Unsafe SDK archive path')
             data=sdk.read(entry)
+            # Verify every member before writing it, including an existing cached copy.
+            record=verify(target.read_bytes() if target.exists() else data,target)
             target.parent.mkdir(parents=True,exist_ok=True)
             if not target.exists():target.write_bytes(data)
-            records.append({'path':str(target.relative_to(ROOT)).replace('\\','/'),
-                            'url':f'https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/{sdk_commit}/external/entt/{relative}',
-                            'sha256':hashlib.sha256(target.read_bytes()).hexdigest()})
+            records.append(record)
     records.append(fetch(f'https://raw.githubusercontent.com/b01dev/MCBE_DX12_ModBase/{sdk_commit}/LICENSE',ROOT/'external'/'bedrock-sdk'/'LICENSE'))
     cmake = ROOT/'tools'/'vendor'/'cmake-3.31.8-windows-x86_64'/'bin'/'cmake.exe'
     if not cmake.exists():
@@ -75,20 +88,21 @@ def main():
                 if not target.is_relative_to(destination):
                     raise ValueError('Unsafe archive path')
             package.extractall(destination)
-    lock = ROOT/'dependencies.lock.json'
-    if lock.exists():
-        previous = json.loads(lock.read_text())
-        pinned = {x['path']: x for x in previous['files']}
-        for record in records:
-            old = pinned.get(record['path'])
-            if old and old['sha256'] != record['sha256']:
-                raise ValueError('Dependency hash changed: '+record['path'])
-            pinned[record['path']] = record
-        records = list(pinned.values())
-    lock.write_text(json.dumps({'imguiCommit': IMGUI, 'jsonCommit': JSON, 'minhookCommit': MINHOOK,'enttCommit':ENTT,
-                               'cmakeVersion': '3.31.8', 'files': records}, indent=2)+'\n')
+    # Bootstrap consumes the reviewed lock; it never blesses downloaded bytes by rewriting it.
     print(f'Pinned dependencies ready: {len(records)} files')
     print(cmake)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--verify-only', action='store_true', help='Verify vendored source files without downloading build tools')
+    args = parser.parse_args()
+    if args.verify_only:
+        count = 0
+        for path in PINNED:
+            target = ROOT/path
+            if path.startswith('external/') or target.exists():
+                verify(target.read_bytes(), target)
+                count += 1
+        print(f'Verified {count} pinned files; no downloads or changes')
+    else:
+        main()

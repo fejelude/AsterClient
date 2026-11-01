@@ -1,12 +1,8 @@
 #pragma once
-#include "core/model.h"
+#include "config/profile.h"
 #include <filesystem>
 #include <mutex>
-#include "json.hpp"
 namespace aster {
-using Json = nlohmann::json;
-Json profileToJson(const Profile& profile);
-Profile profileFromJson(Json data, std::vector<std::string>& warnings);
 struct LoadResult {
     Profile profile;
     std::vector<std::string> warnings;

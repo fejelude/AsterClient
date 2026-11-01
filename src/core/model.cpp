@@ -149,7 +149,7 @@ std::vector<std::string> validate(Profile& p){
                     values[s.id]=defValues.at(s.id); if(!inserted) warnings.push_back(d.id+"."+s.id+" reset to default");
                 }else if(s.kind==SettingKind::Number){
                     double number=std::get<double>(value->second);
-                    if(!std::isfinite(number)) number=s.initial;
+                    if(!std::isfinite(number)){number=s.initial;warnings.push_back(d.id+"."+s.id+" reset to default");}
                     double fixed=std::clamp(number,s.minimum,s.maximum);
                     if(fixed!=number) warnings.push_back(d.id+"."+s.id+" clamped");
                     value->second=fixed;
@@ -198,8 +198,8 @@ ModuleHealth computeHealth(const ModuleDefinition& d,const ModuleConfig& m,const
 std::string_view stateName(ModuleState s){
     switch(s){case ModuleState::Disabled:return "OFF";case ModuleState::EnabledOffline:return "WAITING";
     case ModuleState::Initializing:return "INITIALIZING";case ModuleState::InputRunningUnverified:return "INPUT / UNVERIFIED";
-    case ModuleState::Active:return "ACTIVE";case ModuleState::Unsupported:return "UNSUPPORTED";case ModuleState::Failed:return "FAILED";}
-    if(s==ModuleState::Bound)return "BOUND";if(s==ModuleState::Requested)return "APPLIED";if(s==ModuleState::Observed)return "OBSERVED";
+    case ModuleState::Active:return "ACTIVE";case ModuleState::Unsupported:return "UNSUPPORTED";case ModuleState::Failed:return "FAILED";
+    case ModuleState::Bound:return "BOUND";case ModuleState::Requested:return "APPLIED";case ModuleState::Observed:return "OBSERVED";}
     return "UNKNOWN";
 }
 double timerTps(double x){return 20.*std::clamp(x,.1,5.);}

@@ -53,9 +53,12 @@ void Interface::deviceChanged(ID3D11Device* device){
     if(image_){image_->Release();image_=nullptr;}device_=device;
     if(device_&&!imageBytes_.empty())try{loadImageBytes(imageBytes_);}catch(...){message="Background could not be restored after renderer reset.";}
 }
-void Interface::changed(){dirty_=true;lastChange_=ImGui::GetTime();input_.configure(p_);}
+namespace {
+double steadySeconds(){return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();}
+}
+void Interface::changed(){dirty_=true;lastChange_=steadySeconds();input_.configure(p_);}
 void Interface::save(){
-    lastSave_=ImGui::GetTime();
+    lastSave_=steadySeconds();
     try{store_.save(p_);dirty_=false;saveFailed_=false;message="Configuration saved.";log_.event("config","CONFIG_SAVED","Atomic profile commit completed.");}
     catch(...){saveFailed_=true;message="Configuration could not be saved. The previous file is preserved.";log_.event("config","CONFIG_SAVE_FAILED",message);}
 }
@@ -246,6 +249,7 @@ std::filesystem::path Interface::chooseFile(bool saveFile,const wchar_t* filter,
 }
 void Interface::beginImageLoad(std::string source){
     if(imageTask_.valid())return;
+    imageGeneration_=profileGeneration_;
     imageTask_=std::async(std::launch::async,[source=std::move(source)]{
         if(source.rfind("https://",0)==0){auto response=httpRequest(source,"GET",{},20*1024*1024);
             if(response.status!=200)throw std::runtime_error("Image download failed.");return response.body;}
@@ -287,7 +291,7 @@ void Interface::appearanceImage(){
     ImGui::SetNextItemWidth(-145*scale_);update|=ImGui::SliderFloat("Y Position",&p_.ui.backgroundY,-2000,2000,"%.0f px",ImGuiSliderFlags_AlwaysClamp);
     ImGui::Dummy({0,5*scale_});
     if(ImGui::Button("Choose Image")){auto file=chooseFile(false,L"Images\0*.png;*.jpg;*.jpeg;*.bmp;*.gif\0All files\0*.*\0\0");if(!file.empty())beginImageLoad(utf8(file.wstring()));}
-    ImGui::SameLine();if(ImGui::Button("Use Contours")){if(image_){image_->Release();image_=nullptr;}imageBytes_.clear();p_.ui.imagePath.clear();changed();}
+    ImGui::SameLine();if(ImGui::Button("Use Contours")){++profileGeneration_;if(image_){image_->Release();image_=nullptr;}imageBytes_.clear();p_.ui.imagePath.clear();changed();}
     ImGui::SetNextItemWidth(-105*scale_);editString("##image-source",imageSource_);help("Local image path or HTTPS URL. Network access occurs only when Load Image is pressed.");ImGui::SameLine();
     ImGui::BeginDisabled(imageTask_.valid()||imageSource_.empty());if(ImGui::Button("Load Image"))beginImageLoad(imageSource_);ImGui::EndDisabled();
     update|=check("Animate Background",p_.ui.animateBackground);ImGui::SameLine();update|=check("Scale Image",p_.ui.scaleImage,"Fit the image to cover the control window before applying Scaling.");
@@ -374,6 +378,9 @@ void Interface::applyProfile(Profile profile){
     validate(profile);input_.stop("Profile changed. Press F8 in-world to resume.");p_=std::move(profile);++profileGeneration_;
     if(!hotkeys_.configureHide(p_.bindings.at("hide")))message="Hide hotkey conflicts with another app. The tray icon can restore the window.";
     license_.configure(p_.license);input_.configure(p_);changed();save();
+    imageBytes_.clear();
+    if(!p_.ui.imagePath.empty())try{imageBytes_=readFile(wide(p_.ui.imagePath),20*1024*1024);}
+    catch(...){message="Imported background is unavailable; the procedural background is active.";}
     deviceChanged(device_);
 }
 void Interface::plugs(){
@@ -463,8 +470,11 @@ void Interface::diagnosticPanel(){
 void Interface::pollTasks(){
     if(imageTask_.valid()&&ready(imageTask_.wait_for(std::chrono::seconds(0)))){
         try{
-            auto bytes=imageTask_.get();loadImageBytes(bytes);auto path=store_.path().parent_path().parent_path()/L"assets"/L"background.image";
-            atomicWrite(path,bytes,false);imageBytes_=std::move(bytes);p_.ui.imagePath=utf8(path.wstring());changed();save();message="Background image loaded and stored locally.";
+            auto bytes=imageTask_.get();
+            if(imageGeneration_==profileGeneration_){
+                loadImageBytes(bytes);auto path=store_.path().parent_path().parent_path()/L"assets"/L"background.image";
+                atomicWrite(path,bytes,false);imageBytes_=std::move(bytes);p_.ui.imagePath=utf8(path.wstring());changed();save();message="Background image loaded and stored locally.";
+            }
         }catch(const std::exception& e){message=std::string("Image not loaded: ")+e.what();}
     }
     if(updateTask_.valid()&&ready(updateTask_.wait_for(std::chrono::seconds(0)))){
@@ -475,6 +485,10 @@ void Interface::pollTasks(){
         try{auto path=downloadTask_.get();downloadMessage_="Download verified and saved: "+utf8(path.wstring())+". Close this app before replacing it; the prior executable is preserved.";}
         catch(const std::exception& e){downloadMessage_=std::string("Release was not accepted: ")+e.what();}
     }
+}
+void Interface::tick(){
+    pollTasks();const auto now=steadySeconds();
+    if(dirty_&&now-lastChange_>.8&&now-lastSave_>(saveFailed_?10.:1.))save();
 }
 void Interface::render(float dpiScale){
     scale_=p_.ui.scale*dpiScale;ImGui::GetIO().FontGlobalScale=scale_*.5f;
@@ -497,7 +511,6 @@ void Interface::render(float dpiScale){
     style.Colors[ImGuiCol_ScrollbarBg]={0,0,0,.1f};style.Colors[ImGuiCol_ScrollbarGrab]={accent_.x,accent_.y,accent_.z,.45f};
     style.Colors[ImGuiCol_NavHighlight]=accent_;style.Colors[ImGuiCol_TableHeaderBg]={.07f,.08f,.12f,.9f};
     style.Colors[ImGuiCol_TableRowBgAlt]={.2f,.22f,.3f,.08f};style.Colors[ImGuiCol_Separator]=rgba(p_.ui.border,.8f);ImGui::GetStyle()=style;
-    pollTasks();if(dirty_&&ImGui::GetTime()-lastChange_>.8&&ImGui::GetTime()-lastSave_>(saveFailed_?10.:1.))save();
     if(message!=lastMessage_){lastMessage_=message;messageChangedAt_=ImGui::GetTime();}
     auto size=ImGui::GetIO().DisplaySize;ImGui::SetNextWindowPos({0,0});ImGui::SetNextWindowSize(size);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{0,0});

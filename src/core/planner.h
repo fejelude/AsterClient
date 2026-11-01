@@ -23,6 +23,7 @@ public:
     explicit InputPlanner(std::uint32_t seed=0xA57E);
     std::vector<OutputEvent> tick(double time,const Profile&,const PhysicalInput&,const InputGate&,const InputContext& context={});
     std::vector<OutputEvent> stop(const PhysicalInput&,bool restoreForward=false);
+    std::vector<OutputEvent> cancelBatch(const std::vector<OutputEvent>& planned,const PhysicalInput&);
     void reset();
     bool ownsKey(int key)const{return ownedKeys_.contains(key);}
 private:

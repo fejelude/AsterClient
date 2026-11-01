@@ -102,7 +102,7 @@ ab::Control bridgeConfiguration(const Profile& p){
 }
 struct EngineService::Impl {
     GameDetector& detector;Diagnostics& log;mutable std::mutex mutex;
-    ab::Control control;PhysicalInput physical;std::array<int,6> movement{};EngineRuntime runtime;
+    ab::Control control;PhysicalInput physical;std::array<int,6> movement{};EngineRuntime runtime;std::uint64_t lastHeartbeat=0;
     BridgeSession session;std::jthread worker;
     Impl(GameDetector& d,Diagnostics& l):detector(d),log(l),worker([this](std::stop_token stop){run(stop);}){}
     ~Impl(){worker.request_stop();if(worker.joinable())worker.join();}
@@ -110,13 +110,20 @@ struct EngineService::Impl {
         DWORD attempted=0;std::uint64_t attemptCreation=0;ab::Status previous=ab::Status::Waiting;
         while(!stop.stop_requested()){
             auto game=detector.snapshot();
+            if(session.alive()&&game.present&&(attempted!=game.pid||attemptCreation!=game.creationTime)){
+                {std::lock_guard lock(mutex);runtime={};lastHeartbeat=0;runtime.detail="Minecraft process identity changed";}
+                session.close();
+            }
             if(!game.present||!session.alive()){
-                if(session.id())session.close();
+                if(session.id()){
+                    {std::lock_guard lock(mutex);runtime={};lastHeartbeat=0;runtime.detail="Adapter connection ended; restart Minecraft to reconnect";}
+                    session.close();
+                }
                 if(game.present&&game.identityVerified&&(attempted!=game.pid||attemptCreation!=game.creationTime)){
                     attempted=game.pid;attemptCreation=game.creationTime;
                     try{session.connect(game,runningExecutable().parent_path()/L"AsterBridge.dll");log.event("adapter","ADAPTER_ATTACHED","Exact executable hash verified; native bridge connected.","DETECTED -> BOUND",game.build);}
-                    catch(const std::exception& e){std::lock_guard lock(mutex);runtime={};runtime.detail=e.what();log.event("adapter","ADAPTER_REFUSED",e.what(),"DETECTED -> UNSUPPORTED",game.build);}
-                }else if(!game.present){attempted=0;attemptCreation=0;std::lock_guard lock(mutex);runtime={};runtime.detail="Waiting for Minecraft";}
+                    catch(const std::exception& e){std::lock_guard lock(mutex);runtime={};lastHeartbeat=0;runtime.detail=e.what();log.event("adapter","ADAPTER_REFUSED",e.what(),"DETECTED -> UNSUPPORTED",game.build);}
+                }else if(!game.present){attempted=0;attemptCreation=0;std::lock_guard lock(mutex);runtime={};lastHeartbeat=0;runtime.detail="Waiting for Minecraft";}
             }
             if(session.alive()){
                 ab::Control next;{std::lock_guard lock(mutex);next=control;}
@@ -125,14 +132,15 @@ struct EngineService::Impl {
                     EngineRuntime r;r.session=session.id();r.sha256=kSupportedGameSha256;r.buildProtocol=2225;
                     r.heartbeatAge=GetTickCount64()-t.heartbeat;r.bound=t.status==ab::Status::Hooked||t.status==ab::Status::WorldDetected||t.status==ab::Status::LayoutVerified;
                     r.worldReady=t.status==ab::Status::LayoutVerified&&r.heartbeatAge<500;r.permitted=t.permitted!=0&&r.worldReady;
-                    r.screen=t.screen;r.world=t.worldGeneration;r.attackCalls=t.attackCalls;r.localTps=t.measuredLocalTps;
+                    r.screen.assign(t.screen,std::find(std::begin(t.screen),std::end(t.screen),'\0'));r.world=t.worldGeneration;r.attackCalls=t.attackCalls;r.localTps=t.measuredLocalTps;
                     for(unsigned n=0;n<2;++n){r.clickRequests[n]=t.clickRequests[n];r.clickActions[n]=t.clickActions[n];}
                     r.blockTarget=t.blockTarget!=0;r.entityTarget=t.entityTarget!=0;
                     r.blockToken=(static_cast<std::uint64_t>(static_cast<std::uint32_t>(t.blockX))*73856093u)^(static_cast<std::uint64_t>(static_cast<std::uint32_t>(t.blockY))*19349663u)^(static_cast<std::uint64_t>(static_cast<std::uint32_t>(t.blockZ))*83492791u)^t.worldGeneration;
                     r.detail=!r.bound?"Native adapter failed its signature/layout checks":!r.worldReady?"Adapter bound; waiting for an active world":r.permitted?"Native adapter running in the focused world":r.screen!="gameplay_captured"?"Gameplay paused: "+r.screen:"Adapter bound; press F8 in Minecraft to arm";
                     for(unsigned n=0;n<EngineModuleCount;++n){auto& m=r.modules[n];const auto& e=t.modules[n];m.bound=r.bound&&(t.boundMask&(1u<<n));m.requested=(next.enabled&(1u<<n))!=0;m.conditions=e.conditions!=0&&r.permitted;m.applied=e.applied!=0&&r.permitted;m.requests=e.requests;m.observations=e.observations;m.appliedValue=e.appliedValue;m.observedValue=e.observedValue;m.reason=!m.bound?"Native handler unavailable":!r.permitted?r.detail:!m.conditions?"Waiting for module conditions":m.applied?"Native action applied; observations are counted separately":"Handler ready for an eligible action";}
                     if(t.status!=previous){log.event("adapter","ADAPTER_STATE",r.detail,"",game.build);previous=t.status;}
-                    {std::lock_guard lock(mutex);runtime=std::move(r);}
+                    refreshEngineLiveness(r,GetTickCount64(),t.heartbeat);
+                    {std::lock_guard lock(mutex);runtime=std::move(r);lastHeartbeat=t.heartbeat;}
                 }
             }
             Sleep(10);
@@ -148,5 +156,9 @@ void EngineService::input(const PhysicalInput& p,bool armed,bool licensed,const 
     c.movement=0;for(unsigned n=0;n<6;++n)if(p.keys[impl_->movement[n]])c.movement|=1u<<n;
     for(unsigned n=0;n<2;++n){c.mouse[n]=p.mouse[n];c.physicalPress[n]=p.pressSequence[n];c.outputClicks[n]=clicks[n];c.mining[n]=mining[n];}
 }
-EngineRuntime EngineService::status()const{std::lock_guard lock(impl_->mutex);return impl_->runtime;}
+EngineRuntime EngineService::status()const{
+    std::lock_guard lock(impl_->mutex);auto result=impl_->runtime;
+    if(impl_->lastHeartbeat)refreshEngineLiveness(result,GetTickCount64(),impl_->lastHeartbeat);
+    return result;
+}
 }

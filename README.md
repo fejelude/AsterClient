@@ -2,6 +2,8 @@
 
 See the [runtime contract](docs/RUNTIME_CONTRACT.md) for setting semantics and the [validation report](docs/VALIDATION.md) for measured coverage.
 
+The [repository stability review](docs/REPOSITORY_REVIEW.md) records current fixes, reproduced defects, test results and remaining Windows/private-world checks. PR checks build and package the Windows application separately from portable tests.
+
 An original Windows 11 x64 application guided by the supplied Nitro clean-room specification and ASTER feature guide. It uses C++20, Win32, Direct3D 11 and Dear ImGui, with an independently researched native adapter for one exact Bedrock executable. No Nitro binaries, branding assets, secrets or paid-service protocols are included.
 
 The adapter supports Microsoft Store x64 package build **1.26.6005.0**, executable SHA-256 `988f6a61403b4381aa41e6c66d64cce441b14e561a9b10f647c2758ef3f2672a`. Other executables fail closed. Configuration, native action, observed component state and server acceptance are distinct; a saved switch never establishes a gameplay result.
@@ -64,4 +66,4 @@ The update checker verifies signed metadata, SHA-256 and a trusted Authenticode 
 
 Read [implementation status](docs/IMPLEMENTATION_STATUS.md), [compatibility](docs/COMPATIBILITY.md), [requirements traceability](docs/REQUIREMENTS.md), and [validation report](docs/VALIDATION.md). Validation separates mathematical/platform tests, main-client tests, native runtime measurements and independent world events. Proprietary algorithm parity and universal multiplayer acceptance are not established by these tests.
 
-The development release is **unsigned**. Verify the published SHA-256 manifest. A trusted publisher certificate is required before a public signed release; no trust-store or antivirus settings are changed. so yea
+The development release is **unsigned**. Verify the published SHA-256 manifest. A trusted publisher certificate is required before a public signed release; no trust-store or antivirus settings are changed.

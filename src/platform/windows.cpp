@@ -321,7 +321,14 @@ InputService::InputService(GameDetector& d,InputObserver& o,Diagnostics& l):dete
         for(const auto& event:events){
             if(event.kind!=OutputKind::KeyUp&&event.kind!=OutputKind::MouseUp){
                 auto fresh=detector_.snapshot();bool stillArmed;{std::lock_guard lock(mutex_);stillArmed=status_.armed&&status_.licensed;}
-                if((!stillArmed&&!(event.module=="physical_restore"&&context.restorePhysical))||!fresh.foreground||(!gameplayCaptureReady(fresh,engine_.status())&&config.requireCapturedCursor))break;
+                if((!stillArmed&&!(event.module=="physical_restore"&&context.restorePhysical))||!fresh.foreground||(!gameplayCaptureReady(fresh,engine_.status())&&config.requireCapturedCursor)){
+                    // The planner has already transferred ownership for this whole batch.
+                    // Cancel it explicitly so a later key-up cannot be lost by breaking here.
+                    stop("Input conditions changed while dispatching; press F8 in-world to resume.");
+                    for(const auto& release:planner.cancelBatch(events,observer_.snapshot()))
+                        if(release.kind==OutputKind::KeyUp)sendEvent(release);
+                    mining={};break;
+                }
             }
             if(event.kind==OutputKind::Click){std::lock_guard lock(mutex_);++status_.requested[event.code];}
             const bool native=(event.kind==OutputKind::Click||event.kind==OutputKind::MouseDown||event.kind==OutputKind::MouseUp)&&engine.bound;
@@ -333,7 +340,9 @@ InputService::InputService(GameDetector& d,InputObserver& o,Diagnostics& l):dete
                 if(ok&&event.kind==OutputKind::KeyDown){const char* ids[]={"walk","sprint","stap"};for(unsigned n=0;n<3;++n)if(event.module==ids[n])++keyRequests_[n];}
                 if(!ok){++status_.failures;status_.inputHealthy=false;status_.armed=false;status_.stopReason="Windows rejected an input event; paused.";}}
             if(!ok){log_.event(event.module,"INPUT_SEND_FAILED","Windows rejected synthesized input; scheduler paused.");
-                for(const auto& release:planner.stop(observer_.snapshot()))sendEvent(release);break;}
+                for(const auto& release:planner.cancelBatch(events,observer_.snapshot()))
+                    if(release.kind==OutputKind::KeyUp)sendEvent(release);
+                mining={};break;}
         }
         {std::lock_guard lock(mutex_);
             keyApplied_={config.modules.at("walk").enabled&&planner.ownsKey(config.movement[0]),config.modules.at("sprint").enabled&&planner.ownsKey(config.movement[4]),config.modules.at("stap").enabled&&planner.ownsKey(config.movement[2])};

@@ -8,7 +8,7 @@ double InputPlanner::interval(double cps,bool randomize){
     double factor=randomize?std::uniform_real_distribution<double>(.88,1.12)(random_):1.;
     return factor/std::clamp(cps,1.,40.);
 }
-void InputPlanner::reset(){channels_={};ownedKeys_.clear();permittedLast_=false;waitForRelease_={};heldMouse_={};blockSince_=-1;tapUntil_=0;lastAttack_=0;forwardSuppressed_=false;}
+void InputPlanner::reset(){channels_={};ownedKeys_.clear();permittedLast_=false;waitForRelease_={};heldMouse_={};blockSince_=-1;blockToken_=0;tapUntil_=0;lastAttack_=0;forwardSuppressed_=false;suppressedKey_=0;}
 std::vector<OutputEvent> InputPlanner::stop(const PhysicalInput& input,bool restoreForward){
     std::vector<OutputEvent> result;
     if(restoreForward&&forwardSuppressed_&&suppressedKey_>0&&input.keys[suppressedKey_])result.push_back({OutputKind::KeyDown,suppressedKey_,"physical_restore"});
@@ -22,9 +22,25 @@ std::vector<OutputEvent> InputPlanner::stop(const PhysicalInput& input,bool rest
     for(int i=0;i<2;++i)waitForRelease_[i]=input.mouse[i];
     return result;
 }
+std::vector<OutputEvent> InputPlanner::cancelBatch(const std::vector<OutputEvent>& planned,const PhysicalInput& input){
+    auto releases=stop(input);
+    // tick() has already dropped ownership of keys whose release is queued in
+    // this batch. A canceled dispatch still needs to deliver those releases.
+    for(const auto& event:planned){
+        if(event.module!="cleanup"||(event.kind!=OutputKind::KeyUp&&event.kind!=OutputKind::MouseUp))continue;
+        if(event.kind==OutputKind::KeyUp&&(event.code<0||event.code>=256||input.keys[event.code]))continue;
+        if(std::none_of(releases.begin(),releases.end(),[&](const auto& r){return r.kind==event.kind&&r.code==event.code;}))
+            releases.push_back(event);
+    }
+    return releases;
+}
 std::vector<OutputEvent> InputPlanner::tick(double now,const Profile& profile,const PhysicalInput& input,const InputGate& gate,const InputContext& context){
     if(!std::isfinite(now)||!gate.permits()||!context.worldReady){lastAttack_=context.attackSequence;return stop(input,context.restorePhysical);}
     std::vector<OutputEvent> events;
+    if(forwardSuppressed_&&suppressedKey_!=profile.movement[0]){
+        if(input.keys[suppressedKey_])events.push_back({OutputKind::KeyDown,suppressedKey_,"stap_restore"});
+        forwardSuppressed_=false;tapUntil_=0;
+    }
     if(!permittedLast_){
         for(int i=0;i<2;++i)waitForRelease_[i]=waitForRelease_[i]||input.mouse[i];
         permittedLast_=true;
@@ -63,7 +79,7 @@ std::vector<OutputEvent> InputPlanner::tick(double now,const Profile& profile,co
     if(!tapping&&profile.modules.at("stap").enabled&&context.attackSequence!=lastAttack_&&input.keys[profile.movement[0]]&&!input.keys[profile.movement[2]]){tapUntil_=now+.06;tapping=true;}
     lastAttack_=context.attackSequence;
     if(tapping&&!forwardSuppressed_&&input.keys[profile.movement[0]]){events.push_back({OutputKind::KeyUp,profile.movement[0],"stap"});suppressedKey_=profile.movement[0];forwardSuppressed_=true;}
-    if(!tapping&&forwardSuppressed_){if(input.keys[profile.movement[0]])events.push_back({OutputKind::KeyDown,profile.movement[0],"stap_restore"});forwardSuppressed_=false;}
+    if(!tapping&&forwardSuppressed_){if(input.keys[suppressedKey_])events.push_back({OutputKind::KeyDown,suppressedKey_,"stap_restore"});forwardSuppressed_=false;}
     std::set<int> wanted;
     if(tapping)wanted.insert(profile.movement[2]);
     if(profile.modules.at("walk").enabled&&!tapping)wanted.insert(profile.movement[0]);

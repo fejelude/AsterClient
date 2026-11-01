@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { spawn } from 'node:child_process';
 import { createHash, generateKeyPairSync, randomBytes, verify } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
 import { startService, envelope } from './server.mjs';
 
@@ -19,7 +20,12 @@ function child(executable,args) {
   });
 }
 test('Independent owner service and native Windows client integration', {timeout:90000}, async t=>{
-  const data=resolve(import.meta.dirname,'..','test-results','private',`service-${Date.now()}`);mkdirSync(data,{recursive:true});
+  const native=resolve(process.env.ASTER_NATIVE_TESTS_EXE||join(import.meta.dirname,'..','build','Release','AsterTests.exe'));
+  const unavailable=process.platform!=='win32'?'Requires Windows and AsterTests.exe':!existsSync(native)?'Build AsterTests.exe or set ASTER_NATIVE_TESTS_EXE':false;
+  if(process.env.ASTER_REQUIRE_NATIVE_TESTS==='1')assert.equal(unavailable,false,'Native integration tests are required in this run');
+  const nativeOptions={skip:unavailable};
+  const data=mkdtempSync(join(tmpdir(),'aster-service-'));
+  t.after(()=>rmSync(data,{recursive:true,force:true}));
   const keys=generateKeyPairSync('rsa',{modulusLength:3072,publicKeyEncoding:{type:'spki',format:'pem'},privateKeyEncoding:{type:'pkcs8',format:'pem'}});
   writeFileSync(join(data,'signing-private.pem'),keys.privateKey,{mode:0o600});writeFileSync(join(data,'signing-public.pem'),keys.publicKey);
   const server=startService({data,port:0,development:true,rateLimit:200});await once(server,'listening');
@@ -60,6 +66,18 @@ test('Independent owner service and native Windows client integration', {timeout
       assert.equal((await post('/api/v1/activate',{key:raw})).status,400);
       const response=await fetch(endpoint+'/api/v1/activate',{method:'POST',headers:{'content-type':'application/json'},body:'{invalid'});assert.equal(response.status,400);
     });
+    await t.test('Malformed nonce types and JSON lookalike media types are rejected',async()=>{
+      for(const value of [[nonce()],{},123,null])assert.equal((await post('/api/v1/activate',{key:raw,nonce:value})).status,400);
+      const response=await fetch(endpoint+'/api/v1/activate',{method:'POST',headers:{'content-type':'application/jsonp'},body:JSON.stringify({key:raw,nonce:nonce()})});
+      assert.equal(response.status,415);
+      assert.equal((await post('/api/v1/activate',{key:raw,nonce:nonce()})).status,200);
+    });
+    await t.test('Refresh tokens expire at their declared second and failed requests roll back',async()=>{
+      const activation=await post('/api/v1/activate',{key:raw,nonce:nonce()});assert.equal(activation.status,200);
+      db.prepare('UPDATE refresh_sessions SET expires_at=? WHERE token_hash=?').run(time(),sha(activation.body.refreshToken));
+      const n=nonce();assert.equal((await post('/api/v1/refresh',{refreshToken:activation.body.refreshToken,nonce:n})).status,401);
+      assert.equal((await post('/api/v1/activate',{key:raw,nonce:n})).status,200);
+    });
     await t.test('Revocation invalidates live access and refresh sessions',async()=>{
       db.prepare('UPDATE licenses SET revoked=1 WHERE id=?').run(id);
       assert.equal((await post('/api/v1/refresh',{refreshToken:rotated.body.refreshToken,nonce:nonce()})).body.error,'LICENSE_REVOKED');
@@ -74,11 +92,10 @@ test('Independent owner service and native Windows client integration', {timeout
       assert.ok(!db.prepare('SELECT key_hash FROM licenses WHERE id=?').get(id).key_hash.includes(raw));
       assert.equal(db.prepare('SELECT COUNT(*) AS count FROM refresh_sessions WHERE token_hash=?').get(rotated.body.refreshToken).count,0);
     });
-    const native=resolve(import.meta.dirname,'..','build','Release','AsterTests.exe');
-    await t.test('Native activation, real Windows vault and remembered-session flow',async()=>{
+    await t.test('Native activation, real Windows vault and remembered-session flow',nativeOptions,async()=>{
       await child(native,['--license-prepare',endpoint,join(data,'signing-public.pem'),keyFile]);
     });
-    await t.test('Native update checker verifies a real service-signed feed',async()=>{
+    await t.test('Native update checker verifies a real service-signed feed',nativeOptions,async()=>{
       const release={schema:1,kind:'aster-release',platform:'windows-x64',channel:'stable',version:'0.2.0',
         issuedAt:time(),expiresAt:time()+3600,url:'https://example.com/AsterClient-0.2.0.exe',sha256:'0'.repeat(64),notes:'Integration fixture metadata only.'};
       mkdirSync(join(data,'releases'));writeFileSync(join(data,'releases','stable.json'),JSON.stringify(envelope(release,keys.privateKey)));
@@ -86,7 +103,7 @@ test('Independent owner service and native Windows client integration', {timeout
       const damaged=envelope(release,keys.privateKey);damaged.payload=damaged.payload.slice(1);writeFileSync(join(data,'releases','stable.json'),JSON.stringify(damaged));
       await child(native,['--update-reject',endpoint+'/updates/stable.json',join(data,'signing-public.pem')]);
     });
-    await t.test('Native client uses signed offline grace after the server stops',async()=>{
+    await t.test('Native client uses signed offline grace after the server stops',nativeOptions,async()=>{
       db.close();await new Promise(resolve=>server.close(resolve));
       await child(native,['--license-offline',endpoint,join(data,'signing-public.pem'),keyFile]);
     });

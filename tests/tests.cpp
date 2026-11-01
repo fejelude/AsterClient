@@ -59,6 +59,9 @@ int main(int argc,char** argv){
                 auto pem=readFile(wide(config.publicKeyPath),16384);CredentialVault vault(L"AsterClient/license/"+wide(sha256(config.endpoint+"\n"+pem)));
                 auto original=vault.read();require(original.has_value());vault.write("{corrupt");
                 {LicenseClient client(config,log);auto state=waitLicense(client);require(state.state==LicenseState::Rejected);require(!state.entitled());
+                    auto key=readFile(wide(argv[4]),512);while(!key.empty()&&(key.back()=='\r'||key.back()=='\n'))key.pop_back();
+                    require(client.activate(key));SecureZeroMemory(key.data(),key.size());
+                    require(waitLicense(client).state==LicenseState::Activated,"A corrupt cached session blocked a fresh activation");
                     client.forget();require(waitLicense(client).state==LicenseState::NotActivated);require(!vault.read());}
                 vault.write(*original);SecureZeroMemory(original->data(),original->size());
             });

@@ -193,10 +193,12 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,LPWSTR,int){
                 auto entitlement=license.snapshot();
                 input.setLicensed(!profile.license.required||(license.configuredFor(profile.license)&&entitlement.state!=LicenseState::LocalDevelopment&&entitlement.entitled()));
                 if(windowContext.width&&windowContext.height){
+                    graphics.context->OMSetRenderTargets(0,nullptr,nullptr);
                     graphics.target.Reset();auto hr=graphics.swap->ResizeBuffers(0,windowContext.width,windowContext.height,DXGI_FORMAT_UNKNOWN,0);
                     windowContext.width=windowContext.height=0;if(FAILED(hr)||!graphics.renderTarget())recreate();
                 }
                 if(smokeSeconds&&std::chrono::steady_clock::now()-started>std::chrono::seconds(smokeSeconds))break;
+                ui.tick();
                 if(!IsWindowVisible(window)||IsIconic(window)){MsgWaitForMultipleObjectsEx(0,nullptr,100,QS_ALLINPUT,MWMO_INPUTAVAILABLE);continue;}
                 if(std::chrono::steady_clock::now()<nextFrame){
                     auto remaining=std::chrono::duration_cast<std::chrono::milliseconds>(nextFrame-std::chrono::steady_clock::now()).count();

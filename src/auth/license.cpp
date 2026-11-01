@@ -158,7 +158,8 @@ void LicenseClient::process(Job job,std::string key,ServiceConfig config,std::ui
             if(!permittedServiceUrl(config.endpoint))throw std::runtime_error("HTTPS_REQUIRED");
             pem=readFile(wide(config.publicKeyPath),16384);
             vault.emplace(L"AsterClient/license/"+wide(sha256(config.endpoint+"\n"+pem)));
-            if(job!=Job::Forget)if(auto record=vault->read()){
+            // A fresh activation must be able to replace an unreadable remembered session.
+            if(job!=Job::Forget&&job!=Job::Activate)if(auto record=vault->read()){
                 Wipe wipeRecord{*record};cached=Json::parse(*record);
                 claims=verifyEnvelope(cached.at("envelope"),pem);verifyEntitlement(claims,"",unixNow());
                 if(cached.at("lastSeen").get<std::int64_t>()>unixNow()+60)throw std::runtime_error("CLOCK_ROLLBACK_DETECTED");

@@ -43,9 +43,11 @@ function activeLicense(license) {
 }
 export function startService({ data, port=38471, development=false, cert, tlsKey, rateLimit=30 }) {
   if ((!cert || !tlsKey) && !development) throw new Error('TLS certificate and key required; loopback HTTP needs explicit development mode.');
+  if (Boolean(cert)!==Boolean(tlsKey)) throw new Error('TLS certificate and key must be supplied together.');
   data = resolve(data);
-  const db = openDatabase(data);
   const privateKey = readFileSync(join(data,'signing-private.pem'));
+  const tlsOptions=cert?{cert:readFileSync(cert),key:readFileSync(tlsKey),minVersion:'TLSv1.2'}:null;
+  const db = openDatabase(data);
   const limits = new Map();
   function consumeRate(ip) {
     const minute=Math.floor(now()/60);
@@ -86,16 +88,16 @@ export function startService({ data, port=38471, development=false, cert, tlsKey
       }
       if (req.method!=='POST' || !['/api/v1/activate','/api/v1/refresh'].includes(req.url))
         throw Object.assign(new Error('NOT_FOUND'),{status:404});
-      if (!String(req.headers['content-type']||'').startsWith('application/json')) throw Object.assign(new Error('JSON_REQUIRED'),{status:415});
+      if (!/^application\/json(?:\s*;|$)/i.test(String(req.headers['content-type']||''))) throw Object.assign(new Error('JSON_REQUIRED'),{status:415});
       const chunks=[];let length=0;
       for await (const chunk of req) { length+=chunk.length;if (length>8192) throw Object.assign(new Error('REQUEST_TOO_LARGE'),{status:413});chunks.push(chunk); }
       let body;try { body=JSON.parse(Buffer.concat(chunks).toString('utf8')); }catch{throw Object.assign(new Error('INVALID_JSON'),{status:400});}
-      if (!body || typeof body!=='object' || Array.isArray(body) || !/^[a-f0-9]{48}$/.test(body.nonce||''))
+      if (!body || typeof body!=='object' || Array.isArray(body) || typeof body.nonce!=='string' || !/^[a-f0-9]{48}$/.test(body.nonce))
         throw Object.assign(new Error('INVALID_NONCE'),{status:400});
       db.exec('BEGIN IMMEDIATE');transaction=true;
-      db.prepare('DELETE FROM nonces WHERE expires_at<?').run(now());
-      db.prepare('DELETE FROM refresh_sessions WHERE expires_at<?').run(now());
-      db.prepare('DELETE FROM access_sessions WHERE expires_at<?').run(now());
+      db.prepare('DELETE FROM nonces WHERE expires_at<=?').run(now());
+      db.prepare('DELETE FROM refresh_sessions WHERE expires_at<=?').run(now());
+      db.prepare('DELETE FROM access_sessions WHERE expires_at<=?').run(now());
       if (db.prepare('INSERT OR IGNORE INTO nonces VALUES(?,?)').run(body.nonce,now()+900).changes!==1)
         throw Object.assign(new Error('REPLAYED_NONCE'),{status:409});
       let license;
@@ -121,10 +123,16 @@ export function startService({ data, port=38471, development=false, cert, tlsKey
       res.end(JSON.stringify({error:status===500?'SERVICE_UNAVAILABLE':error.message}));
     }
   };
-  const server=cert&&tlsKey?createHttpsServer({cert:readFileSync(cert),key:readFileSync(tlsKey),minVersion:'TLSv1.2'},handler):createHttpServer(handler);
+  let server;
+  try { server=tlsOptions?createHttpsServer(tlsOptions,handler):createHttpServer(handler); }
+  catch(error) { db.close();throw error; }
   server.requestTimeout=10000;server.headersTimeout=10000;
-  server.listen(port,'127.0.0.1');
-  server.on('close',()=>db.close());
+  let closed=false;
+  const closeDatabase=()=>{if(!closed){closed=true;db.close();}};
+  server.once('close',closeDatabase);
+  server.once('error',closeDatabase);
+  try { server.listen(port,'127.0.0.1'); }
+  catch(error) { closeDatabase();throw error; }
   return server;
 }
 function cli() {
